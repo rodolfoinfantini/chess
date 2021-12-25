@@ -202,7 +202,7 @@ export default class Piece {
         this.element.style.transform = `translateX(${this.x * 100}%) translateY(${this.y * 100}%)`
     }
     getImgSrc() {
-        return `../assets/pieces/${this.color}-${this.type}.svg`
+        return `assets/pieces/${this.color}-${this.type}.svg`
     }
     capture() {
         position.halfMoves = 0
