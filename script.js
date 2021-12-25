@@ -15,7 +15,7 @@ function createBoard(appendTo) {
     const coordsColumns = document.createElement('coords')
     coordsRows.classList.add('rows')
     coordsColumns.classList.add('columns')
-    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    const letters = ['', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     for (let i = 1; i <= 8; i++) {
         const coord = document.createElement('coord')
         coord.textContent = i
