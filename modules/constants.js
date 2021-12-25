@@ -95,3 +95,9 @@ export const gamemode = {
     playerVsComputer: 'playerVsComputer',
     computerVsComputer: 'computerVsComputer'
 }
+
+export const state = {
+    start: 'start',
+    playing: 'playing',
+    end: 'end'
+}

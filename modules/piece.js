@@ -10,39 +10,6 @@ import {
     tile
 } from './constants.js'
 
-export const position = {
-    fen: '',
-    movesHistory: 'position startpos moves',
-    fenHistory: [],
-    fullMoves: 0,
-    halfMoves: 0
-}
-
-export const pieces = []
-export let turn = color.white
-export const tiles = {
-    selected: [],
-    lastMove: [],
-    move: [],
-    check: []
-}
-export const castling = {
-    Q: true, //white
-    K: true, //white
-    q: true, //black
-    k: true //black
-}
-
-export const enPassant = {
-    x: null,
-    y: null
-}
-
-export const attacked = {
-    [color.white]: {},
-    [color.black]: {}
-}
-
 export default class Piece {
     x
     y
@@ -54,7 +21,8 @@ export default class Piece {
     legalMoves = {}
     lastRow = 0
     hasMoved = false
-    constructor(type = type.pawn, pieceColor = color.white, x = 0, y = 0, boardElement, ghost = false) {
+    game
+    constructor(type = type.pawn, pieceColor = color.white, x = 0, y = 0, boardElement, ghost = false, game = {}) {
         this.type = type
         this.color = pieceColor
         this.x = x
@@ -62,6 +30,7 @@ export default class Piece {
         this.boardElement = boardElement
         this.ghost = ghost
         this.lastRow = this.color == color.white ? 0 : 7
+        this.game = game
     }
     render() {
         this.boardElement.appendChild(this.createElement())
@@ -86,13 +55,10 @@ export default class Piece {
         this.element.style.transform = `translateX(${xPx - (this.element.offsetWidth / 2)}px) translateY(${yPx - (this.element.offsetHeight / 2)}px)`
     }
     canMove(x, y) {
-        //if (turn !== this.color) return false
-        /* const move = this.legalMoves.find(move => move.x === x && move.y === y)
-        return move != undefined */
         return this.legalMoves[posString(x, y)] != undefined
     }
     hasPiece(x, y) {
-        return pieces.find(piece => piece.x === x && piece.y === y)
+        return this.game.pieces.find(piece => piece.x === x && piece.y === y)
     }
     move(x, y, force = false) {
         x = +x
@@ -101,34 +67,41 @@ export default class Piece {
             this.resetPosition()
             return false
         }
-        clearTiles('move')
-        clearTiles('selected')
-        const oldHalfMoves = position.halfMoves
-        console.log(oldHalfMoves)
+        this.game.clearTiles('move')
+        this.game.clearTiles('selected')
+        const oldHalfMoves = this.game.position.halfMoves
         let capture = false
         const piece = this.hasPiece(x, y)
-        if (this.type === type.pawn && x === enPassant.x && y === enPassant.y) {
+        if (this.type === type.pawn && x === this.game.enPassant.x && y === this.game.enPassant.y) {
             capture = this.hasPiece(x, this.color === color.white ? 3 : 4)
         } else if (piece) capture = piece
         else {
             play.move()
-            position.halfMoves++
+            this.game.position.halfMoves++
         }
         if (capture) capture.capture()
         if (this.type === type.rook) {
             if (this.x === 0 && this.y === 7) {
-                castling.Q = false
+                this.game.castling.Q = false
             } else if (this.x === 0 && this.y === 0) {
-                castling.q = false
+                this.game.castling.q = false
             } else if (this.x === 7 && this.y === 7) {
-                castling.K = false
+                this.game.castling.K = false
             } else if (this.x === 7 && this.y === 0) {
-                castling.k = false
+                this.game.castling.k = false
             }
         }
+        let reverseCastling1 = false
+        let reverseCastling2 = false
         if (this.type === type.king && this.hasMoved === false) {
-            castling[this.color === color.white ? 'Q' : 'q'] = false
-            castling[this.color === color.white ? 'K' : 'k'] = false
+            if (this.game.castling[this.color === color.white ? 'Q' : 'q'] === true) {
+                this.game.castling[this.color === color.white ? 'Q' : 'q'] = false
+                reverseCastling1 = this.color === color.white ? 'Q' : 'q'
+            }
+            if (this.game.castling[this.color === color.white ? 'K' : 'k'] === true) {
+                this.game.castling[this.color === color.white ? 'K' : 'k'] = false
+                reverseCastling2 = this.color === color.white ? 'K' : 'k'
+            }
             if (x === 6) {
                 play.stop()
                 play.castle()
@@ -143,23 +116,28 @@ export default class Piece {
                 rook.resetPosition()
             }
         }
-        enPassant.x = null
-        enPassant.y = null
+        this.game.enPassant.x = null
+        this.game.enPassant.y = null
         if (this.checkEnPassant(y)) {
-            enPassant.x = this.x
-            enPassant.y = this.color === color.white ? 5 : 2
+            this.game.enPassant.x = this.x
+            this.game.enPassant.y = this.color === color.white ? 5 : 2
         }
         const oldX = this.x
         const oldY = this.y
         //!CHANGE POSITION
         this.x = x
         this.y = y
-        generateAttackTiles(this.color === color.white ? color.black : color.white)
-        if (isCheck(this.color)) {
+        if (this.game.isCheck(this.color)) {
             if (capture) {
-                position.halfMoves = oldHalfMoves
-                pieces.push(capture)
+                this.game.position.halfMoves = oldHalfMoves
+                this.game.pieces.push(capture)
                 this.boardElement.appendChild(capture.element)
+            }
+            if (reverseCastling1) {
+                this.game.castling[reverseCastling1] = true
+            }
+            if (reverseCastling2) {
+                this.game.castling[reverseCastling2] = true
             }
             play.stop()
             this.x = oldX
@@ -168,23 +146,23 @@ export default class Piece {
             return false
         }
         this.hasMoved = true
-        clearTiles('lastMove')
-        clearTiles('check')
+        this.game.clearTiles('lastMove')
+        this.game.clearTiles('check')
         this.setElementPosition()
-        tiles.lastMove.push(new Tile(oldX, oldY, this.boardElement, tile.lastMove))
-        tiles.lastMove.push(new Tile(this.x, this.y, this.boardElement, tile.lastMove))
+        this.game.tiles.lastMove.push(new Tile(oldX, oldY, this.boardElement, tile.lastMove))
+        this.game.tiles.lastMove.push(new Tile(this.x, this.y, this.boardElement, tile.lastMove))
         if (this.y === this.lastRow && this.type === type.pawn) {
             this.element.classList.remove(this.type)
             this.type = type.queen
             this.element.classList.add(this.type)
             this.element.querySelector('img').src = this.getImgSrc()
         }
-        generateAttackTiles(turn)
-        turn = turn === color.white ? color.black : color.white
-        if (isCheck(turn)) {
+        this.game.setTurn(oppositeColor(this.game.getTurn()))
+        // this.game.turn = oppositeColor(this.game.turn)
+        if (this.game.isCheck(this.game.getTurn())) {
             console.log('check')
-            const king = getPiecesOfType(type.king).find(piece => piece.color === turn)
-            tiles.check.push(new Tile(king.x, king.y, this.boardElement, tile.check))
+            const king = this.game.getPiecesOfType(type.king).find(piece => piece.color === this.game.getTurn())
+            this.game.tiles.check.push(new Tile(king.x, king.y, this.boardElement, tile.check))
         }
         return true
     }
@@ -205,8 +183,8 @@ export default class Piece {
         return `assets/pieces/${this.color}-${this.type}.svg`
     }
     capture() {
-        position.halfMoves = 0
-        pieces.splice(pieces.indexOf(this), 1)
+        this.game.position.halfMoves = 0
+        this.game.pieces.splice(this.game.pieces.indexOf(this), 1)
         this.boardElement.removeChild(this.element)
         play.stop()
         play.capture()
@@ -215,9 +193,6 @@ export default class Piece {
         const piece = this.hasPiece(x, y)
         if (piece) return piece.color !== this.color
         return false
-    }
-    setTurn(color) {
-        turn = color
     }
 
 
@@ -271,23 +246,23 @@ export default class Piece {
         if (this.canCapture(diagonalRight.x, diagonalRight.y)) this.legalMoves[posString(diagonalRight.x, diagonalRight.y)] = true
 
         // en passant
-        if (this.y === 3 && this.color === color.white && enPassant.y === 2) {
+        if (this.y === 3 && this.color === color.white && this.game.enPassant.y === 2) {
             const leftPawn = this.hasPiece(this.x - 1, this.y)
-            if (leftPawn && leftPawn.type === type.pawn && enPassant.x === this.x - 1) {
-                this.legalMoves[posString(enPassant.x, enPassant.y)] = false
+            if (leftPawn && leftPawn.type === type.pawn && this.game.enPassant.x === this.x - 1) {
+                this.legalMoves[posString(this.game.enPassant.x, this.game.enPassant.y)] = false
             }
             const rightPawn = this.hasPiece(this.x + 1, this.y)
-            if (rightPawn && rightPawn.type === type.pawn && enPassant.x === this.x + 1) {
-                this.legalMoves[posString(enPassant.x, enPassant.y)] = false
+            if (rightPawn && rightPawn.type === type.pawn && this.game.enPassant.x === this.x + 1) {
+                this.legalMoves[posString(this.game.enPassant.x, this.game.enPassant.y)] = false
             }
-        } else if (this.y === 4 && this.color === color.black && enPassant.y === 5) {
+        } else if (this.y === 4 && this.color === color.black && this.game.enPassant.y === 5) {
             const leftPawn = this.hasPiece(this.x - 1, this.y)
-            if (leftPawn && leftPawn.type === type.pawn && enPassant.x === this.x - 1) {
-                this.legalMoves[posString(enPassant.x, enPassant.y)] = false
+            if (leftPawn && leftPawn.type === type.pawn && this.game.enPassant.x === this.x - 1) {
+                this.legalMoves[posString(this.game.enPassant.x, this.game.enPassant.y)] = false
             }
             const rightPawn = this.hasPiece(this.x + 1, this.y)
-            if (rightPawn && rightPawn.type === type.pawn && enPassant.x === this.x + 1) {
-                this.legalMoves[posString(enPassant.x, enPassant.y)] = false
+            if (rightPawn && rightPawn.type === type.pawn && this.game.enPassant.x === this.x + 1) {
+                this.legalMoves[posString(this.game.enPassant.x, this.game.enPassant.y)] = false
             }
         }
     }
@@ -454,30 +429,40 @@ export default class Piece {
         }
         //castle
         if (this.hasMoved === false && attack === false) {
-            if (this.color === color.black) {
-                if (this.hasPiece(5, 0) === undefined && this.hasPiece(6, 0) === undefined) {
-                    const rook = this.hasPiece(7, 0)
-                    if (rook != undefined && rook.hasMoved === false) {
-                        this.legalMoves[posString(6, 0)] = false
+            if (!this.game.isCheck(this.color)) {
+                if (this.color === color.black) {
+                    if (this.hasPiece(5, 0) === undefined && this.hasPiece(6, 0) === undefined) {
+                        if (!this.game.isAttack(5, 0, oppositeColor(this.color)) && !this.game.isAttack(6, 0, oppositeColor(this.color))) {
+                            const rook = this.hasPiece(7, 0)
+                            if (rook != undefined && rook.hasMoved === false) {
+                                this.legalMoves[posString(6, 0)] = false
+                            }
+                        }
                     }
-                }
-                if (this.hasPiece(1, 0) === undefined && this.hasPiece(2, 0) === undefined && this.hasPiece(3, 0) === undefined) {
-                    const rook = this.hasPiece(0, 0)
-                    if (rook != undefined && rook.hasMoved === false) {
-                        this.legalMoves[posString(2, 0)] = false
+                    if (this.hasPiece(1, 0) === undefined && this.hasPiece(2, 0) === undefined && this.hasPiece(3, 0) === undefined) {
+                        if (!this.game.isAttack(1, 0, oppositeColor(this.color)) && !this.game.isAttack(2, 0, oppositeColor(this.color)) && !this.game.isAttack(3, 0, oppositeColor(this.color))) {
+                            const rook = this.hasPiece(0, 0)
+                            if (rook != undefined && rook.hasMoved === false) {
+                                this.legalMoves[posString(2, 0)] = false
+                            }
+                        }
                     }
-                }
-            } else if (this.color === color.white) {
-                if (this.hasPiece(5, 7) === undefined && this.hasPiece(6, 7) === undefined) {
-                    const rook = this.hasPiece(7, 7)
-                    if (rook != undefined && rook.hasMoved === false) {
-                        this.legalMoves[posString(6, 7)] = false
+                } else if (this.color === color.white) {
+                    if (this.hasPiece(5, 7) === undefined && this.hasPiece(6, 7) === undefined) {
+                        if (!this.game.isAttack(5, 7, oppositeColor(this.color)) && !this.game.isAttack(6, 7, oppositeColor(this.color))) {
+                            const rook = this.hasPiece(7, 7)
+                            if (rook != undefined && rook.hasMoved === false) {
+                                this.legalMoves[posString(6, 7)] = false
+                            }
+                        }
                     }
-                }
-                if (this.hasPiece(1, 7) === undefined && this.hasPiece(2, 7) === undefined && this.hasPiece(3, 7) === undefined) {
-                    const rook = this.hasPiece(0, 7)
-                    if (rook != undefined && rook.hasMoved === false) {
-                        this.legalMoves[posString(2, 7)] = false
+                    if (this.hasPiece(1, 7) === undefined && this.hasPiece(2, 7) === undefined && this.hasPiece(3, 7) === undefined) {
+                        if (!this.game.isAttack(1, 7, oppositeColor(this.color)) && !this.game.isAttack(2, 7, oppositeColor(this.color)) && !this.game.isAttack(3, 7, oppositeColor(this.color))) {
+                            const rook = this.hasPiece(0, 7)
+                            if (rook != undefined && rook.hasMoved === false) {
+                                this.legalMoves[posString(2, 7)] = false
+                            }
+                        }
                     }
                 }
             }
@@ -495,43 +480,10 @@ export default class Piece {
     }
 }
 
-function posString(x, y) {
+export function posString(x, y) {
     return `x${x}y${y}`
 }
 
-function clearTiles(key) {
-    if (!tiles[key]) return
-    tiles[key].forEach(tile => tile.element.remove())
-    tiles[key].length = 0
-}
-
-function generateAttackTiles(color) {
-    attacked[color] = {}
-    const piecesOfColor = getPiecesOfColor(color)
-    for (const piece of piecesOfColor) {
-        const attackedTiles = piece.createAttackTiles()
-        for (const attack in attackedTiles) {
-            attacked[color][attack] = true
-        }
-    }
-}
-
-function getPiecesOfColor(color) {
-    return pieces.filter(piece => piece.color === color)
-}
-
-function getPiecesOfType(type) {
-    return pieces.filter(piece => piece.type === type)
-}
-
-export function isCheck(checkingColor) {
-    const king = getPiecesOfType(type.king).find(piece => piece.color === checkingColor)
-    const enemyAttack = attacked[checkingColor === color.black ? color.white : color.black]
-    for (const str in enemyAttack) {
-        const split = str.replace('x', '').split('y')
-        const x = +split[0]
-        const y = +split[1]
-        if (x === king.x && y === king.y) return true
-    }
-    return false
+export function oppositeColor(opColor) {
+    return opColor === color.white ? color.black : color.white
 }
