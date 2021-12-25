@@ -27,8 +27,8 @@ import {
 } from './modules/constants.js'
 
 const game = {
-    // mode: gamemode.playerVsComputer,
-    mode: gamemode.playerVsPlayer,
+    mode: gamemode.playerVsComputer,
+    // mode: gamemode.playerVsPlayer,
     // mode: gamemode.computerVsComputer,
     player: {
         color: color.white,
