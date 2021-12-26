@@ -18,7 +18,8 @@ import {
     color,
     colorLetter,
     type,
-    state as states
+    state as states,
+    info
 } from './constants.js'
 
 import {
@@ -26,10 +27,21 @@ import {
 } from './sound.js'
 
 export function Game(gMode, playerColor, board) {
+    const autoFlipCheckBox = board.querySelector('.board-options .auto-flip input')
+
     let turn = color.white
 
     function setTurn(newTurn) {
         turn = newTurn
+
+        //auto flip
+        if (mode === gamemode.playerVsPlayer && autoFlipCheckBox.checked) {
+            if (turn === color.white) {
+                board.classList.remove('flipped')
+            } else {
+                board.classList.add('flipped')
+            }
+        }
     }
 
     function getTurn() {
@@ -93,8 +105,13 @@ export function Game(gMode, playerColor, board) {
 
 
     function startPos() {
+        state = states.start
+
+        isClicking = false
+        draggingPiece = null
+        ghostPiece = null
+
         stockfish.postMessage("ucinewgame")
-        stockfish.postMessage("position startpos")
         if (pieces.length > 0) {
             pieces.forEach(piece => piece.element.remove())
         }
@@ -104,16 +121,19 @@ export function Game(gMode, playerColor, board) {
             newPiece.render()
             pieces.push(newPiece)
         })
-        position.movesHistory = 'position startpos moves'
+        turn = color.white
         position.fen = fenString()
+        position.movesHistory = `position fen ${position.fen} moves`
+        stockfish.postMessage(`position fen ${position.fen}`)
+        // position.movesHistory = `position startpos moves`
         position.fenHistory.length = 0
         position.fenHistory.push(position.fen)
         position.fullMoves = 0
         position.halfMoves = 0
-        turn = color.white
-        tiles.selected.length = 0
-        tiles.move.length = 0
-        tiles.lastMove.length = 0
+        clearTiles('check')
+        clearTiles('selected')
+        clearTiles('move')
+        clearTiles('lastMove')
         enPassant.x = null
         enPassant.y = null
         castling.q = true
@@ -123,6 +143,7 @@ export function Game(gMode, playerColor, board) {
     }
 
     function stop() {
+        stockfish.onmessage = null
         pieces.forEach(piece => piece.element.remove())
         state = states.end
         board.onmousedown = null
@@ -138,6 +159,11 @@ export function Game(gMode, playerColor, board) {
 
         if (mode === gamemode.computerVsComputer) moveStockfish()
         if (mode === gamemode.playerVsComputer && player.color === color.black) moveStockfish()
+    }
+
+    function restart() {
+        startPos()
+        start()
     }
 
     function getClientRect() {
@@ -216,6 +242,7 @@ export function Game(gMode, playerColor, board) {
     }
 
     function move(clientX, clientY) {
+        if (!draggingPiece) return
         const boardRect = getClientRect()
         const pos = {
             x: clientX - boardRect.left,
@@ -251,7 +278,7 @@ export function Game(gMode, playerColor, board) {
             }
         }
 
-
+        stockfish.postMessage(position.movesHistory)
 
         if (mode === gamemode.playerVsComputer) moveStockfish()
         else analyzeStockfish()
@@ -276,8 +303,8 @@ export function Game(gMode, playerColor, board) {
     }
 
     function checkDraw() {
-        if (repetitionDraw()) return 'repetition'
-        if (fiftyMovesDraw()) return 'fifty moves'
+        if (repetitionDraw()) return info.repetition
+        if (fiftyMovesDraw()) return info.fiftyMoves
 
         return false
     }
@@ -294,7 +321,7 @@ export function Game(gMode, playerColor, board) {
     }
 
     function draw(str) {
-        alert('draw ' + str)
+        showInfo(info[str] || info.draw)
     }
 
     function removeGhostPiece() {
@@ -391,7 +418,7 @@ export function Game(gMode, playerColor, board) {
         //halfMoves and fullMoves
         fen += ' ' + position.halfMoves + ' ' + position.fullMoves
 
-        console.log(fen)
+        console.log('fen:', fen)
 
         return fen
     }
@@ -425,13 +452,14 @@ export function Game(gMode, playerColor, board) {
         promotion = promotion + ''
         position.movesHistory += ' ' + moveNumberToString(from + to) + promotion
         position.fen = fenString()
-        position.fenHistory.push(position.fen)
+        position.fenHistory.push(position.fen.split(' ')[0])
         stockfish.postMessage(position.movesHistory)
     }
 
     stockfish.onmessage = ({
         data
     }) => {
+        if (state === states.end || state === states.start) return
         const dataArr = data.split(' ')
         if (data.includes('checkmate') || data === 'info depth 0 score mate 0') {
             checkmate(oppositeColor(turn))
@@ -443,6 +471,7 @@ export function Game(gMode, playerColor, board) {
                     const moveNumber = moveStringToNumber(move)
                     const split = moveNumber.split('')
                     const piece = pieces.find(piece => piece.x == split[0] && piece.y == split[1])
+                    if (!piece) return
                     piece.move(split[2], split[3], true)
                     if (hasMoved(piece)) {
                         updatePosition(split[0] + split[1], split[2] + split[3], split[4])
@@ -452,14 +481,72 @@ export function Game(gMode, playerColor, board) {
                     if (mode === gamemode.computerVsComputer) moveStockfish()
                     else analyzeStockfish()
                 }
+            } else {
+                if (state === states.playing) stalemate()
             }
         }
+    }
+
+    function stalemate() {
+        play.end()
+        state = states.end
+        draw(info.stalemate)
     }
 
     function checkmate(winner) {
         play.end()
         state = states.end
-        alert(`Checkmate, ${winner} wins!`)
+        showInfo(info.checkmate, winner)
+    }
+
+    function showInfo(infoType, winner) {
+        const div = document.createElement('div')
+        div.classList.add('info')
+        div.classList.add(infoType)
+        if (winner) div.classList.add(winner === color.white ? 'white' : 'black')
+        const h1 = document.createElement('h1')
+        const p = document.createElement('p')
+        if (infoType === info.checkmate) {
+            h1.textContent = 'Checkmate!'
+            p.textContent = `${winner === color.white ? 'White' : 'Black'} is victorious.`
+        } else if (infoType === info.repetition) {
+            h1.textContent = 'Draw!'
+            p.textContent = 'By repetition.'
+        } else if (infoType === info.fiftyMoves) {
+            h1.textContent = 'Draw!'
+            p.textContent = 'By the fifty moves rule.'
+        } else if (infoType === info.stalemate) {
+            h1.textContent = 'Draw!'
+            p.textContent = 'By stalemate.'
+        } else {
+            h1.textContent = 'Draw!'
+            // p.textContent = 'By agreement.'
+        }
+        div.appendChild(h1)
+        div.appendChild(p)
+
+        const buttons = document.createElement('div')
+        buttons.classList.add('buttons')
+
+        const restartBtn = document.createElement('button')
+        restartBtn.textContent = 'Restart'
+        restartBtn.onclick = () => {
+            restart()
+            div.remove()
+        }
+
+        const closeBtn = document.createElement('button')
+        closeBtn.textContent = 'Close'
+        closeBtn.onclick = () => {
+            div.remove()
+        }
+
+        buttons.appendChild(restartBtn)
+        buttons.appendChild(closeBtn)
+
+        div.appendChild(buttons)
+
+        board.appendChild(div)
     }
 
     function moveStockfish() {
@@ -536,7 +623,8 @@ export function Game(gMode, playerColor, board) {
         clearTiles,
         stop,
         setGameMode,
-        setMoveTime
+        setMoveTime,
+        startPos
     }
 
 

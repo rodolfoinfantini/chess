@@ -101,3 +101,11 @@ export const state = {
     playing: 'playing',
     end: 'end'
 }
+
+export const info = {
+    checkmate: 'checkmate',
+    stalemate: 'stalemate',
+    repetition: 'repetition',
+    fiftyMoves: 'fiftyMoves',
+    draw: 'draw'
+}

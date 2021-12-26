@@ -31,6 +31,7 @@ function createBoard(appendTo) {
     const options = document.createElement('div')
     options.classList.add('board-options')
 
+    //flip button
     const flipBtn = document.createElement('button')
     flipBtn.textContent = 'Flip board'
     flipBtn.classList.add('flip-btn')
@@ -38,7 +39,29 @@ function createBoard(appendTo) {
         board.classList.toggle('flipped')
     }
 
+    //auto flip checkmark
+    const label = document.createElement('label')
+    label.textContent = 'Auto flip'
+    label.classList.add('auto-flip')
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.checked = false
+    label.appendChild(input)
+
+    //stop
+    const stopBtn = document.createElement('button')
+    stopBtn.textContent = 'Stop'
+    stopBtn.classList.add('stop-btn')
+    stopBtn.onclick = () => {
+        if (game) game.startPos()
+        gamemodeDiv.parentElement.classList.remove('hidden')
+    }
+
+
+
     options.appendChild(flipBtn)
+    options.appendChild(label)
+    options.appendChild(stopBtn)
 
     board.appendChild(options)
 
@@ -71,6 +94,7 @@ playBtn.onclick = () => {
     gamemodeDiv.parentElement.classList.add('hidden')
     const selectedBtn = gamemodeDiv.querySelector('.toggle.selected')
     const mode = selectedBtn.getAttribute('data-mode')
+    if (game) game.stop()
     game = Game(gamemode[mode] || gamemode.playerVsPlayer, color.white, board)
     placeholderGame.stop()
     placeholderBoard.remove()

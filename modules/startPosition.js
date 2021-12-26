@@ -1,198 +1,80 @@
 import {
     type,
-    color
+    color,
+    moveNumber
 } from './constants.js'
 
-export const startPosition = [{
-        type: type.rook,
-        color: color.black,
-        x: 0,
-        y: 0
-    },
-    {
-        type: type.knight,
-        color: color.black,
-        x: 1,
-        y: 0
-    },
-    {
-        type: type.bishop,
-        color: color.black,
-        x: 2,
-        y: 0
-    },
-    {
-        type: type.queen,
-        color: color.black,
-        x: 3,
-        y: 0
-    },
-    {
-        type: type.king,
-        color: color.black,
-        x: 4,
-        y: 0
-    },
-    {
-        type: type.bishop,
-        color: color.black,
-        x: 5,
-        y: 0
-    },
-    {
-        type: type.knight,
-        color: color.black,
-        x: 6,
-        y: 0
-    },
-    {
-        type: type.rook,
-        color: color.black,
-        x: 7,
-        y: 0
-    },
-    {
-        type: type.pawn,
-        color: color.black,
-        x: 0,
-        y: 1
-    },
-    {
-        type: type.pawn,
-        color: color.black,
-        x: 1,
-        y: 1
-    },
-    {
-        type: type.pawn,
-        color: color.black,
-        x: 2,
-        y: 1
-    },
-    {
-        type: type.pawn,
-        color: color.black,
-        x: 3,
-        y: 1
-    },
-    {
-        type: type.pawn,
-        color: color.black,
-        x: 4,
-        y: 1
-    },
-    {
-        type: type.pawn,
-        color: color.black,
-        x: 5,
-        y: 1
-    },
-    {
-        type: type.pawn,
-        color: color.black,
-        x: 6,
-        y: 1
-    },
-    {
-        type: type.pawn,
-        color: color.black,
-        x: 7,
-        y: 1
-    },
-    {
-        type: type.rook,
-        color: color.white,
-        x: 0,
-        y: 7
-    },
-    {
-        type: type.knight,
-        color: color.white,
-        x: 1,
-        y: 7
-    },
-    {
-        type: type.bishop,
-        color: color.white,
-        x: 2,
-        y: 7
-    },
-    {
-        type: type.queen,
-        color: color.white,
-        x: 3,
-        y: 7
-    },
-    {
-        type: type.king,
-        color: color.white,
-        x: 4,
-        y: 7
-    },
-    {
-        type: type.bishop,
-        color: color.white,
-        x: 5,
-        y: 7
-    },
-    {
-        type: type.knight,
-        color: color.white,
-        x: 6,
-        y: 7
-    },
-    {
-        type: type.rook,
-        color: color.white,
-        x: 7,
-        y: 7
-    },
-    {
-        type: type.pawn,
-        color: color.white,
-        x: 0,
-        y: 6
-    },
-    {
-        type: type.pawn,
-        color: color.white,
-        x: 1,
-        y: 6
-    },
-    {
-        type: type.pawn,
-        color: color.white,
-        x: 2,
-        y: 6
-    },
-    {
-        type: type.pawn,
-        color: color.white,
-        x: 3,
-        y: 6
-    },
-    {
-        type: type.pawn,
-        color: color.white,
-        x: 4,
-        y: 6
-    },
-    {
-        type: type.pawn,
-        color: color.white,
-        x: 5,
-        y: 6
-    },
-    {
-        type: type.pawn,
-        color: color.white,
-        x: 6,
-        y: 6
-    },
-    {
-        type: type.pawn,
-        color: color.white,
-        x: 7,
-        y: 6
+class Position {
+    type
+    color
+    x
+    y
+    constructor(type, color, str) {
+        this.type = type
+        this.color = color
+        const strSplit = str.split('')
+        this.x = +moveNumber[`x${strSplit[0]}`]
+        this.y = +moveNumber[`y${strSplit[1]}`]
     }
-]
+}
+
+const positions = {
+    start: [
+        new Position(type.rook, color.black, 'a8'),
+        new Position(type.knight, color.black, 'b8'),
+        new Position(type.bishop, color.black, 'c8'),
+        new Position(type.queen, color.black, 'd8'),
+        new Position(type.king, color.black, 'e8'),
+        new Position(type.bishop, color.black, 'f8'),
+        new Position(type.knight, color.black, 'g8'),
+
+        new Position(type.rook, color.black, 'h8'),
+        new Position(type.pawn, color.black, 'a7'),
+        new Position(type.pawn, color.black, 'b7'),
+        new Position(type.pawn, color.black, 'c7'),
+        new Position(type.pawn, color.black, 'd7'),
+        new Position(type.pawn, color.black, 'e7'),
+        new Position(type.pawn, color.black, 'f7'),
+        new Position(type.pawn, color.black, 'g7'),
+        new Position(type.pawn, color.black, 'h7'),
+
+        new Position(type.pawn, color.white, 'a2'),
+        new Position(type.pawn, color.white, 'b2'),
+        new Position(type.pawn, color.white, 'c2'),
+        new Position(type.pawn, color.white, 'd2'),
+        new Position(type.pawn, color.white, 'e2'),
+        new Position(type.pawn, color.white, 'f2'),
+        new Position(type.pawn, color.white, 'g2'),
+        new Position(type.pawn, color.white, 'h2'),
+
+        new Position(type.rook, color.white, 'a1'),
+        new Position(type.knight, color.white, 'b1'),
+        new Position(type.bishop, color.white, 'c1'),
+        new Position(type.queen, color.white, 'd1'),
+        new Position(type.king, color.white, 'e1'),
+        new Position(type.bishop, color.white, 'f1'),
+        new Position(type.knight, color.white, 'g1'),
+        new Position(type.rook, color.white, 'h1')
+    ],
+    test: [{
+            type: type.king,
+            color: color.black,
+            x: 0,
+            y: 0
+        },
+        {
+            type: type.king,
+            color: color.white,
+            x: 0,
+            y: 2
+        },
+        {
+            type: type.queen,
+            color: color.white,
+            x: 7,
+            y: 2
+        },
+    ]
+}
+
+export const startPosition = positions.start
