@@ -155,6 +155,9 @@ export function Game(gMode, playerColor, board, socket, time) {
         board.appendChild(elements.black)
 
         setInterval(() => {
+            if (state !== states.playing) {
+                return
+            }
             const secs = {
                 white: Math.max(0, msToSec(timers.white.getTime())),
                 black: Math.max(0, msToSec(timers.black.getTime()))
