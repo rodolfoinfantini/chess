@@ -93,7 +93,8 @@ export const moveNumber = {
 export const gamemode = {
     playerVsPlayer: 'playerVsPlayer',
     playerVsComputer: 'playerVsComputer',
-    computerVsComputer: 'computerVsComputer'
+    computerVsComputer: 'computerVsComputer',
+    multiplayer: 'multiplayer'
 }
 
 export const state = {
@@ -107,5 +108,6 @@ export const info = {
     stalemate: 'stalemate',
     repetition: 'repetition',
     fiftyMoves: 'fiftyMoves',
-    draw: 'draw'
+    draw: 'draw',
+    resign: 'resign'
 }

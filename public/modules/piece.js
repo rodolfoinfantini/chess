@@ -151,11 +151,13 @@ export default class Piece {
         this.setElementPosition()
         this.game.tiles.lastMove.push(new Tile(oldX, oldY, this.boardElement, tile.lastMove))
         this.game.tiles.lastMove.push(new Tile(this.x, this.y, this.boardElement, tile.lastMove))
+        let returning = true
         if (this.y === this.lastRow && this.type === type.pawn) {
             this.element.classList.remove(this.type)
             this.type = type.queen
             this.element.classList.add(this.type)
             this.element.querySelector('img').src = this.getImgSrc()
+            returning = 'q'
         }
         this.game.setTurn(oppositeColor(this.game.getTurn()))
         // this.game.turn = oppositeColor(this.game.turn)
@@ -164,7 +166,7 @@ export default class Piece {
             const king = this.game.getPiecesOfType(type.king).find(piece => piece.color === this.game.getTurn())
             this.game.tiles.check.push(new Tile(king.x, king.y, this.boardElement, tile.check))
         }
-        return true
+        return returning
     }
     checkEnPassant(toY) {
         if (!this.type === type.pawn) return false

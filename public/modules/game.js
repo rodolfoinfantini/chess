@@ -26,13 +26,35 @@ import {
     play
 } from './sound.js'
 
-export function Game(gMode, playerColor, board) {
+class Move {
+    from = {
+        x: null,
+        y: null
+    }
+    to = {
+        x: null,
+        y: null
+    }
+    constructor(fromX, fromY, toX, toY) {
+        this.from.x = fromX
+        this.from.y = fromY
+        this.to.x = toX
+        this.to.y = toY
+    }
+}
+
+export function Game(gMode, playerColor, board, socket) {
+    const toMoveDiv = board.querySelector('.color-to-move')
     const autoFlipCheckBox = board.querySelector('.board-options .auto-flip input')
 
     let turn = color.white
 
     function setTurn(newTurn) {
+        toMoveDiv.classList.replace(turn, newTurn)
+
         turn = newTurn
+
+        toMoveDiv.textContent = `${turn === color.white ? 'White' : 'Black'} to move`
 
         //auto flip
         if (mode === gamemode.playerVsPlayer && autoFlipCheckBox.checked) {
@@ -153,6 +175,12 @@ export function Game(gMode, playerColor, board) {
     }
 
     function start() {
+        board.querySelector('.playing-as').textContent = `Playing as ${player.color === color.white ? 'White' : 'Black'}`
+        board.querySelector('.playing-as').classList.add(player.color)
+
+        toMoveDiv.textContent = 'White to move'
+        toMoveDiv.classList.add(turn)
+
         play.start()
 
         state = states.playing
@@ -193,7 +221,7 @@ export function Game(gMode, playerColor, board) {
             }
         } else if (mode === gamemode.computerVsComputer) {
             return
-        } else if (mode === gamemode.playerVsComputer) {
+        } else if (mode === gamemode.playerVsComputer || mode === gamemode.multiplayer) {
             if (clickedPiece.color !== player.color || clickedPiece.color !== turn) {
                 return
             }
@@ -241,6 +269,18 @@ export function Game(gMode, playerColor, board) {
         move(clientX, clientY)
     }
 
+    function movePiece(from, to) {
+        const piece = pieces.find(piece => piece.x === from.x && piece.y === from.y)
+        if (piece) {
+            const moveResult = piece.move(to.x, to.y, true)
+            if (moveResult) {
+                hasMoved(piece)
+                updatePosition(`${from.x}${from.y}`, `${to.x}${to.y}`, moveResult === 'q' ? 'q' : undefined)
+            }
+        }
+        analyzeStockfish()
+    }
+
     function move(clientX, clientY) {
         if (!draggingPiece) return
         const boardRect = getClientRect()
@@ -267,13 +307,17 @@ export function Game(gMode, playerColor, board) {
         removeGhostPiece()
 
         if (draggingPiece) {
-            if (draggingPiece.move(x, y)) {
+            const moveResult = draggingPiece.move(x, y)
+            if (moveResult) {
+                if (mode === gamemode.multiplayer && socket) {
+                    socket.emit('move', new Move(+from.split('')[0], +from.split('')[1], x, y))
+                }
                 if (hasMoved(draggingPiece)) {
-                    updatePosition(from, to)
+                    updatePosition(from, to, moveResult === 'q' ? 'q' : undefined)
                     draggingPiece = null
                     return
                 }
-                updatePosition(from, to)
+                updatePosition(from, to, moveResult === 'q' ? 'q' : undefined)
                 draggingPiece = null
             }
         }
@@ -454,11 +498,13 @@ export function Game(gMode, playerColor, board) {
         position.fen = fenString()
         position.fenHistory.push(position.fen.split(' ')[0])
         stockfish.postMessage(position.movesHistory)
+        console.log(position.movesHistory)
     }
 
     stockfish.onmessage = ({
         data
     }) => {
+        console.log(data)
         if (state === states.end || state === states.start) return
         const dataArr = data.split(' ')
         if (data.includes('checkmate') || data === 'info depth 0 score mate 0') {
@@ -466,7 +512,7 @@ export function Game(gMode, playerColor, board) {
             return
         } else if (dataArr.includes('bestmove')) {
             if (!data.includes('(none)')) {
-                if ((mode === gamemode.playerVsComputer && turn !== player.color) || mode === gamemode.computerVsComputer) {
+                if ((mode === gamemode.playerVsComputer && turn !== player.color) || mode === gamemode.computerVsComputer && mode !== gamemode.multiplayer) {
                     const move = dataArr[1]
                     const moveNumber = moveStringToNumber(move)
                     const split = moveNumber.split('')
@@ -499,6 +545,12 @@ export function Game(gMode, playerColor, board) {
         showInfo(info.checkmate, winner)
     }
 
+    function resign(color) {
+        play.end()
+        state = states.end
+        showInfo(info.resign, color)
+    }
+
     function showInfo(infoType, winner) {
         const div = document.createElement('div')
         div.classList.add('info')
@@ -518,6 +570,10 @@ export function Game(gMode, playerColor, board) {
         } else if (infoType === info.stalemate) {
             h1.textContent = 'Draw!'
             p.textContent = 'By stalemate.'
+        } else if (infoType === info.resign) {
+            h1.textContent = `${winner === color.white ? 'White' : 'Black'} resigned.`
+            p.textContent = `${winner === color.white ? 'Black' : 'White'} is victorious.`
+            div.classList.replace(winner === color.white ? 'white' : 'black', winner === color.white ? 'black' : 'white')
         } else {
             h1.textContent = 'Draw!'
             // p.textContent = 'By agreement.'
@@ -528,12 +584,44 @@ export function Game(gMode, playerColor, board) {
         const buttons = document.createElement('div')
         buttons.classList.add('buttons')
 
-        const restartBtn = document.createElement('button')
-        restartBtn.textContent = 'Restart'
-        restartBtn.onclick = () => {
-            restart()
-            div.remove()
+        if (mode !== gamemode.multiplayer) {
+            const restartBtn = document.createElement('button')
+            restartBtn.textContent = 'Restart'
+            restartBtn.onclick = () => {
+                restart()
+                div.remove()
+            }
+            buttons.appendChild(restartBtn)
+        } else {
+            let requesting = false
+            const rematchBtn = document.createElement('button')
+            rematchBtn.textContent = 'Rematch'
+            rematchBtn.onclick = () => {
+                if (requesting) return
+                requesting = true
+                socket.emit('request-rematch')
+                rematchBtn.textContent = 'Waiting...'
+            }
+
+            socket.on('accepted-rematch', () => {
+                restart()
+                div.remove()
+            })
+
+            socket.on('request-rematch', () => {
+                let accepting = false
+                rematchBtn.textContent = 'Accept rematch'
+                rematchBtn.onclick = () => {
+                    if (accepting) return
+                    accepting = true
+                    socket.emit('request-rematch')
+                    rematchBtn.textContent = '...'
+                }
+            })
+
+            buttons.appendChild(rematchBtn)
         }
+
 
         const closeBtn = document.createElement('button')
         closeBtn.textContent = 'Close'
@@ -541,8 +629,16 @@ export function Game(gMode, playerColor, board) {
             div.remove()
         }
 
-        buttons.appendChild(restartBtn)
         buttons.appendChild(closeBtn)
+
+        if (mode === gamemode.multiplayer) {
+            const exitBtn = document.createElement('button')
+            exitBtn.textContent = 'Exit'
+            exitBtn.onclick = () => {
+                location.search = ''
+            }
+            buttons.appendChild(exitBtn)
+        }
 
         div.appendChild(buttons)
 
@@ -624,7 +720,9 @@ export function Game(gMode, playerColor, board) {
         stop,
         setGameMode,
         setMoveTime,
-        startPos
+        startPos,
+        movePiece,
+        resign
     }
 
 
