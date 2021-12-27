@@ -13,6 +13,7 @@
   "dependencies": {
     "express": "^4.17.2",
     "socket.io": "^1.7.4",
+    "stockfish": "^11.0.0",
     "uuid": "^8.3.2"
   }
 }

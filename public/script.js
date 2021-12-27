@@ -16,6 +16,10 @@ const socket = io('/')
 
 let playerColor
 
+const urlParams = new URLSearchParams(window.location.search)
+const board = createBoard()
+
+
 socket.on('color', data => {
     playerColor = data
     if (playerColor === 'black') {
@@ -25,7 +29,6 @@ socket.on('color', data => {
     }
 })
 
-const urlParams = new URLSearchParams(window.location.search)
 
 
 function createBoard(appendTo = false) {
@@ -98,8 +101,8 @@ function createBoard(appendTo = false) {
     options.appendChild(flipBtn)
     if (!urlParams.has('room')) options.appendChild(label)
     options.appendChild(stopBtn)
-    options.appendChild(playingAs)
-    options.appendChild(colorToMove)
+    // options.appendChild(playingAs)
+    // options.appendChild(colorToMove)
 
     board.appendChild(options)
 
@@ -176,14 +179,56 @@ if (urlParams.has('room')) {
     document.body.appendChild(waitingDiv)
 }
 
+let creating = false
+
 
 createRoomButton.onclick = () => {
     socket.on('create-room', roomId => {
+        if ((roomId + '').startsWith('error')) {
+            creating = false
+            const error = (roomId + '').split(':')[1]
+            alert(error)
+            return
+        }
         const urlParams = new URLSearchParams(window.location.search)
         urlParams.set('room', roomId)
         window.location.search = urlParams.toString()
     })
-    socket.emit('create-room')
+    document.body.appendChild(createTimeSelector())
+}
+
+function createTimeSelector() {
+    const timeDiv = document.createElement('div')
+    timeDiv.classList.add('time-selector')
+    const timeInput = document.createElement('input')
+    timeInput.type = 'number'
+    timeInput.min = '0'
+    timeInput.max = '3600'
+    timeInput.value = '600'
+
+    const timeLabel = document.createElement('label')
+    timeLabel.textContent = 'Game time (seconds)'
+    timeLabel.appendChild(timeInput)
+
+    const createBtn = document.createElement('button')
+    createBtn.textContent = 'Create room'
+    createBtn.onclick = () => {
+        if (creating) return
+        creating = true
+        socket.emit('create-room', timeInput.value)
+    }
+
+    const cancelBtn = document.createElement('button')
+    cancelBtn.textContent = 'Cancel'
+    cancelBtn.onclick = () => {
+        timeDiv.parentElement.removeChild(timeDiv)
+    }
+
+    timeDiv.appendChild(timeLabel)
+    timeDiv.appendChild(createBtn)
+    timeDiv.appendChild(cancelBtn)
+
+    return timeDiv
 }
 
 gamemodeDiv.querySelectorAll('.toggle').forEach(el => {
@@ -200,7 +245,6 @@ const placeholderGame = Game(gamemode.playerVsPlayer, color.white, placeholderBo
 
 const playBtn = document.querySelector('div.play button.play-btn')
 
-const board = createBoard()
 let game
 
 function removeAllTiles() {
@@ -235,15 +279,19 @@ socket.on('resign', (color) => {
     if (game) game.resign(color)
 })
 
-socket.on('start', () => {
+socket.on('start', (time) => {
     waitingDiv.remove()
     placeholderGame.stop()
     placeholderBoard.remove()
     removeAllTiles()
     if (game) game.stop()
-    game = Game(gamemode.multiplayer, playerColor, board, socket)
+    game = Game(gamemode.multiplayer, playerColor, board, socket, +time)
     document.body.appendChild(board)
     game.start()
+})
+
+socket.on('invalid-move', () => {
+    alert('invalid')
 })
 
 socket.on('move', ({

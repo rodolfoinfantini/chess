@@ -442,7 +442,8 @@ export default class Piece {
                         }
                     }
                     if (this.hasPiece(1, 0) === undefined && this.hasPiece(2, 0) === undefined && this.hasPiece(3, 0) === undefined) {
-                        if (!this.game.isAttack(1, 0, oppositeColor(this.color)) && !this.game.isAttack(2, 0, oppositeColor(this.color)) && !this.game.isAttack(3, 0, oppositeColor(this.color))) {
+                        if (!this.game.isAttack(2, 0, oppositeColor(this.color)) && !this.game.isAttack(3, 0, oppositeColor(this.color))) {
+                            // if (!this.game.isAttack(1, 0, oppositeColor(this.color)) && !this.game.isAttack(2, 0, oppositeColor(this.color)) && !this.game.isAttack(3, 0, oppositeColor(this.color))) {
                             const rook = this.hasPiece(0, 0)
                             if (rook != undefined && rook.hasMoved === false) {
                                 this.legalMoves[posString(2, 0)] = false
@@ -459,7 +460,8 @@ export default class Piece {
                         }
                     }
                     if (this.hasPiece(1, 7) === undefined && this.hasPiece(2, 7) === undefined && this.hasPiece(3, 7) === undefined) {
-                        if (!this.game.isAttack(1, 7, oppositeColor(this.color)) && !this.game.isAttack(2, 7, oppositeColor(this.color)) && !this.game.isAttack(3, 7, oppositeColor(this.color))) {
+                        if (!this.game.isAttack(2, 7, oppositeColor(this.color)) && !this.game.isAttack(3, 7, oppositeColor(this.color))) {
+                            // if (!this.game.isAttack(1, 7, oppositeColor(this.color)) && !this.game.isAttack(2, 7, oppositeColor(this.color)) && !this.game.isAttack(3, 7, oppositeColor(this.color))) {
                             const rook = this.hasPiece(0, 7)
                             if (rook != undefined && rook.hasMoved === false) {
                                 this.legalMoves[posString(2, 7)] = false

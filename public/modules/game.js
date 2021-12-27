@@ -26,6 +26,12 @@ import {
     play
 } from './sound.js'
 
+import Timer, {
+    secToMs,
+    msToSec,
+    timeString
+} from './timer.js'
+
 class Move {
     from = {
         x: null,
@@ -35,26 +41,31 @@ class Move {
         x: null,
         y: null
     }
-    constructor(fromX, fromY, toX, toY) {
+    promotion
+    constructor(fromX, fromY, toX, toY, promotion = null) {
         this.from.x = fromX
         this.from.y = fromY
         this.to.x = toX
         this.to.y = toY
+        this.promotion = promotion
     }
 }
 
-export function Game(gMode, playerColor, board, socket) {
+export function Game(gMode, playerColor, board, socket, time) {
+    time = +time
+
+
     const toMoveDiv = board.querySelector('.color-to-move')
     const autoFlipCheckBox = board.querySelector('.board-options .auto-flip input')
 
     let turn = color.white
 
     function setTurn(newTurn) {
-        toMoveDiv.classList.replace(turn, newTurn)
+        if (toMoveDiv) toMoveDiv.classList.replace(turn, newTurn)
 
         turn = newTurn
 
-        toMoveDiv.textContent = `${turn === color.white ? 'White' : 'Black'} to move`
+        if (toMoveDiv) toMoveDiv.textContent = `${turn === color.white ? 'White' : 'Black'} to move`
 
         //auto flip
         if (mode === gamemode.playerVsPlayer && autoFlipCheckBox.checked) {
@@ -125,6 +136,54 @@ export function Game(gMode, playerColor, board, socket) {
         [color.black]: {}
     }
 
+    if (mode === gamemode.multiplayer) {
+        const timers = {
+            white: new Timer(secToMs(time)),
+            black: new Timer(secToMs(time))
+        }
+
+        const elements = {
+            white: document.createElement('div'),
+            black: document.createElement('div')
+        }
+        elements.white.classList.add('timer')
+        elements.white.classList.add('timer-white')
+        elements.black.classList.add('timer')
+        elements.black.classList.add('timer-black')
+
+        board.appendChild(elements.white)
+        board.appendChild(elements.black)
+
+        setInterval(() => {
+            const secs = {
+                white: Math.max(0, msToSec(timers.white.getTime())),
+                black: Math.max(0, msToSec(timers.black.getTime()))
+            }
+            const strings = {
+                white: timeString(secs.white),
+                black: timeString(secs.black)
+            }
+
+            elements.white.textContent = strings.white
+            elements.black.textContent = strings.black
+        }, 100)
+
+        socket.on('update-timers', data => {
+            if (data.running === 'white') {
+                timers.black.stop()
+                timers.white.start()
+            } else if (data.running === 'black') {
+                timers.white.stop()
+                timers.black.start()
+            } else {
+                timers.white.stop()
+                timers.black.stop()
+            }
+            timers.black.setTime(+data.black)
+            timers.white.setTime(+data.white)
+        })
+    }
+
 
     function startPos() {
         state = states.start
@@ -175,11 +234,13 @@ export function Game(gMode, playerColor, board, socket) {
     }
 
     function start() {
-        board.querySelector('.playing-as').textContent = `Playing as ${player.color === color.white ? 'White' : 'Black'}`
-        board.querySelector('.playing-as').classList.add(player.color)
+        try {
+            board.querySelector('.playing-as').textContent = `Playing as ${player.color === color.white ? 'White' : 'Black'}`
+            board.querySelector('.playing-as').classList.add(player.color)
+        } catch (e) {}
 
-        toMoveDiv.textContent = 'White to move'
-        toMoveDiv.classList.add(turn)
+        if (toMoveDiv) toMoveDiv.textContent = 'White to move'
+        if (toMoveDiv) toMoveDiv.classList.add(turn)
 
         play.start()
 
@@ -310,7 +371,7 @@ export function Game(gMode, playerColor, board, socket) {
             const moveResult = draggingPiece.move(x, y)
             if (moveResult) {
                 if (mode === gamemode.multiplayer && socket) {
-                    socket.emit('move', new Move(+from.split('')[0], +from.split('')[1], x, y))
+                    socket.emit('move', new Move(+from.split('')[0], +from.split('')[1], x, y, moveResult === 'q' ? 'q' : undefined))
                 }
                 if (hasMoved(draggingPiece)) {
                     updatePosition(from, to, moveResult === 'q' ? 'q' : undefined)
@@ -462,7 +523,7 @@ export function Game(gMode, playerColor, board, socket) {
         //halfMoves and fullMoves
         fen += ' ' + position.halfMoves + ' ' + position.fullMoves
 
-        console.log('fen:', fen)
+        // console.log('fen:', fen)
 
         return fen
     }
@@ -498,13 +559,11 @@ export function Game(gMode, playerColor, board, socket) {
         position.fen = fenString()
         position.fenHistory.push(position.fen.split(' ')[0])
         stockfish.postMessage(position.movesHistory)
-        console.log(position.movesHistory)
     }
 
     stockfish.onmessage = ({
         data
     }) => {
-        console.log(data)
         if (state === states.end || state === states.start) return
         const dataArr = data.split(' ')
         if (data.includes('checkmate') || data === 'info depth 0 score mate 0') {
@@ -551,6 +610,16 @@ export function Game(gMode, playerColor, board, socket) {
         showInfo(info.resign, color)
     }
 
+    if (socket) socket.on('time-out', timeOut)
+
+    function timeOut(lostColor) {
+        if (state === states.playing) {
+            play.end()
+            state = states.end
+            showInfo(info.timeOut, lostColor === 'black' ? color.white : color.black)
+        }
+    }
+
     function showInfo(infoType, winner) {
         const div = document.createElement('div')
         div.classList.add('info')
@@ -574,6 +643,10 @@ export function Game(gMode, playerColor, board, socket) {
             h1.textContent = `${winner === color.white ? 'White' : 'Black'} resigned.`
             p.textContent = `${winner === color.white ? 'Black' : 'White'} is victorious.`
             div.classList.replace(winner === color.white ? 'white' : 'black', winner === color.white ? 'black' : 'white')
+        } else if (infoType === info.timeOut) {
+            h1.textContent = `${winner === color.white ? 'White' : 'Black'} wins.`
+            p.textContent = `By time out.`
+            // div.classList.replace(winner === color.white ? 'white' : 'black', winner === color.white ? 'black' : 'white')
         } else {
             h1.textContent = 'Draw!'
             // p.textContent = 'By agreement.'

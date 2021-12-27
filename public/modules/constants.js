@@ -109,5 +109,6 @@ export const info = {
     repetition: 'repetition',
     fiftyMoves: 'fiftyMoves',
     draw: 'draw',
-    resign: 'resign'
+    resign: 'resign',
+    timeOut: 'timeOut'
 }
