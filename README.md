@@ -21,6 +21,6 @@
 ![Game mode Screenshot](/screenshots/gamemode.png)
 
 ### PUZZLES!
- * 200,000 puzzles
+ * 500,000 puzzles
  * Filter by rating and theme
 ![Puzzle Screenshot](/screenshots/puzzle.png)
