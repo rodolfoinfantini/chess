@@ -25,6 +25,15 @@ export const tile = {
     check: 'check'
 }
 
+export const letterToType = {
+    p: type.pawn,
+    r: type.rook,
+    n: type.knight,
+    b: type.bishop,
+    q: type.queen,
+    k: type.king
+}
+
 export const letter = {
     [type.pawn]: {
         [color.white]: 'P',
@@ -94,7 +103,8 @@ export const gamemode = {
     playerVsPlayer: 'playerVsPlayer',
     playerVsComputer: 'playerVsComputer',
     computerVsComputer: 'computerVsComputer',
-    multiplayer: 'multiplayer'
+    multiplayer: 'multiplayer',
+    puzzle: 'puzzle'
 }
 
 export const state = {

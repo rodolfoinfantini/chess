@@ -1,0 +1,46 @@
+body {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+div.filters {
+    margin-bottom: 50px;
+    background-color: #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    max-width: 90%;
+}
+
+div.filters input,
+div.filters button,
+div.filters .toggle {
+    padding: 3px 6px;
+    border-radius: 5px;
+}
+
+div.filters .toggle {
+    background-color: #e9e9ed;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+div.filters .btns {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+div.filters label {
+    display: flex;
+    flex-direction: column;
+}
+
+div.filters form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+div.filters .selected {
+    background-color: #aaa;
+}

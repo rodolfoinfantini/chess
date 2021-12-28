@@ -1,5 +1,5 @@
 function player() {
-    const path = 'assets/audios/lichess/'
+    const path = `${location.pathname === '/' ? '' : '../'}assets/audios/lichess/`
     const audios = {
         move: new Audio(path + 'move.ogg'),
         capture: new Audio(path + 'capture.ogg'),

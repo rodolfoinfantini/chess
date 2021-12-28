@@ -19,7 +19,8 @@ import {
     colorLetter,
     type,
     state as states,
-    info
+    info,
+    letterToType
 } from './constants.js'
 
 import {
@@ -51,8 +52,24 @@ class Move {
     }
 }
 
-export function Game(gMode, playerColor, board, socket, time) {
+export function PuzzleGame(puzzle, board, solvedCallback) {
+    const playerColor = puzzle.fen.split(' ')[1] === 'w' ? color.black : color.white
+    return Game(gamemode.puzzle, playerColor, board, undefined, undefined, puzzle, solvedCallback)
+}
+
+export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCallback) {
     time = +time
+
+    let puzzleMoveIndex = 0
+
+    function getPuzzleMoveIndex() {
+        return puzzleMoveIndex
+    }
+
+    function getCurrentPuzzleMove() {
+        const fullMove = puzzle.moves[puzzleMoveIndex]
+        return fullMove.charAt(0) + fullMove.charAt(1) + fullMove.charAt(2) + fullMove.charAt(3)
+    }
 
 
     const toMoveDiv = board.querySelector('.color-to-move')
@@ -103,6 +120,10 @@ export function Game(gMode, playerColor, board, socket, time) {
         q: true, //black
         k: true //black
     }
+
+    function getCastling() {
+        return castling
+    }
     const enPassant = {
         x: null,
         y: null
@@ -110,6 +131,10 @@ export function Game(gMode, playerColor, board, socket, time) {
 
 
     let mode = gMode
+
+    function getMode() {
+        return mode
+    }
 
     function setGameMode(newMode) {
         mode = newMode
@@ -123,7 +148,7 @@ export function Game(gMode, playerColor, board, socket, time) {
     function setMoveTime(newMoveTime) {
         moveTime = newMoveTime
     }
-    const stockfish = new Worker('./stockfish/stockfish.js')
+    const stockfish = new Worker(`${location.pathname === '/' ? '' : '.'}./stockfish/stockfish.js`)
 
     let isClicking = false
 
@@ -187,8 +212,16 @@ export function Game(gMode, playerColor, board, socket, time) {
         })
     }
 
+    function isLowerCase(str) {
+        return str === str.toLowerCase()
+    }
 
     function startPos() {
+        clearTiles('check')
+        clearTiles('selected')
+        clearTiles('move')
+        clearTiles('lastMove')
+
         state = states.start
 
         isClicking = false
@@ -200,35 +233,101 @@ export function Game(gMode, playerColor, board, socket, time) {
             pieces.forEach(piece => piece.element.remove())
         }
         pieces.length = 0
-        startPosition.forEach(piece => {
-            const newPiece = new Piece(piece.type, piece.color, piece.x, piece.y, board, false, obj)
-            newPiece.render()
-            pieces.push(newPiece)
-        })
-        turn = color.white
+        if (!puzzle) {
+            startPosition.forEach(piece => {
+                const newPiece = new Piece(piece.type, piece.color, piece.x, piece.y, board, false, obj)
+                newPiece.render()
+                pieces.push(newPiece)
+            })
+            enPassant.x = null
+            enPassant.y = null
+            castling.q = true
+            castling.k = true
+            castling.Q = true
+            castling.K = true
+            position.fullMoves = 0
+            position.halfMoves = 0
+            turn = color.white
+        } else {
+            const fenArr = puzzle.fen.split(' ')
+            const fenPieces = fenArr[0].split('/')
+            const fenRows = fenPieces.length
+            //r6k/pp2r2p/4Rp1Q/3p4/8/1N1P2R1/PqP2bPP/7K
+            for (let i = 0; i < fenRows; i++) {
+                let nextX = 0
+                for (let j = 0; j < fenPieces[i].length; j++) {
+                    const piece = fenPieces[i][j]
+                    if (isNaN(piece)) {
+                        const newPiece = new Piece(letterToType[piece.toLowerCase()], isLowerCase(piece) ? color.black : color.white, nextX, i, board, false, obj)
+                        newPiece.render()
+                        pieces.push(newPiece)
+                        nextX++
+                    } else {
+                        nextX += +piece
+                    }
+                }
+            }
+            if (fenArr.length > 1) {
+                turn = fenArr[1] === 'w' ? color.white : color.black
+            } else {
+                turn = color.white
+            }
+
+            if (turn === color.white) {
+                board.classList.add('flipped')
+            } else {
+                board.classList.remove('flipped')
+            }
+
+            if (fenArr.length > 2) {
+                castling.q = fenArr[2].includes('q')
+                castling.k = fenArr[2].includes('k')
+                castling.Q = fenArr[2].includes('Q')
+                castling.K = fenArr[2].includes('K')
+            } else {
+                castling.q = true
+                castling.k = true
+                castling.Q = true
+                castling.K = true
+            }
+
+            if (fenArr.length > 3) {
+                if (fenArr[3] === '-') {
+                    enPassant.x = null
+                    enPassant.y = null
+                } else {
+                    enPassant.x = +moveNumber[`x${fenArr[3].charAt(0)}`]
+                    enPassant.y = +moveNumber[`y${fenArr[3].charAt(1)}`]
+                }
+            } else {
+                enPassant.x = null
+                enPassant.y = null
+            }
+
+            if (fenArr.length > 4) {
+                position.halfMoves = +fenArr[4]
+            } else {
+                position.halfMoves = 0
+            }
+
+            if (fenArr.length > 5) {
+                position.fullMoves = +fenArr[5]
+            } else {
+                position.fullMoves = 0
+            }
+        }
+
         position.fen = fenString()
         position.movesHistory = `position fen ${position.fen} moves`
         stockfish.postMessage(`position fen ${position.fen}`)
-        // position.movesHistory = `position startpos moves`
         position.fenHistory.length = 0
         position.fenHistory.push(position.fen)
-        position.fullMoves = 0
-        position.halfMoves = 0
-        clearTiles('check')
-        clearTiles('selected')
-        clearTiles('move')
-        clearTiles('lastMove')
-        enPassant.x = null
-        enPassant.y = null
-        castling.q = true
-        castling.k = true
-        castling.Q = true
-        castling.K = true
     }
 
     function stop() {
         stockfish.onmessage = null
         pieces.forEach(piece => piece.element.remove())
+        board.querySelectorAll('.tile').forEach(tile => tile.remove())
         state = states.end
         board.onmousedown = null
         board.onmouseleave = null
@@ -237,6 +336,11 @@ export function Game(gMode, playerColor, board, socket, time) {
     }
 
     function start() {
+        clearTiles('check')
+        clearTiles('selected')
+        clearTiles('move')
+        clearTiles('lastMove')
+
         try {
             board.querySelector('.playing-as').textContent = `Playing as ${player.color === color.white ? 'White' : 'Black'}`
             board.querySelector('.playing-as').classList.add(player.color)
@@ -249,6 +353,11 @@ export function Game(gMode, playerColor, board, socket, time) {
 
         state = states.playing
 
+        if (mode === gamemode.puzzle) {
+            setTimeout(() => {
+                nextPuzzleMove()
+            }, 700)
+        }
         if (mode === gamemode.computerVsComputer) moveStockfish()
         if (mode === gamemode.playerVsComputer && player.color === color.black) moveStockfish()
     }
@@ -285,7 +394,7 @@ export function Game(gMode, playerColor, board, socket, time) {
             }
         } else if (mode === gamemode.computerVsComputer) {
             return
-        } else if (mode === gamemode.playerVsComputer || mode === gamemode.multiplayer) {
+        } else if (mode === gamemode.playerVsComputer || mode === gamemode.multiplayer || mode === gamemode.puzzle) {
             if (clickedPiece.color !== player.color || clickedPiece.color !== turn) {
                 return
             }
@@ -345,6 +454,21 @@ export function Game(gMode, playerColor, board, socket, time) {
         analyzeStockfish()
     }
 
+    function nextPuzzleMove() {
+        const move = puzzle.moves[puzzleMoveIndex]
+        const moveNumber = moveStringToNumber(move)
+        const split = moveNumber.split('')
+        const piece = pieces.find(piece => piece.x == split[0] && piece.y == split[1])
+        if (!piece) return
+        piece.move(split[2], split[3], true)
+        if (hasMoved(piece)) {
+            updatePosition(split[0] + split[1], split[2] + split[3], split[4])
+            return
+        }
+        updatePosition(split[0] + split[1], split[2] + split[3], split[4])
+        puzzleMoveIndex++
+    }
+
     function move(clientX, clientY) {
         if (!draggingPiece) return
         const boardRect = getClientRect()
@@ -373,6 +497,17 @@ export function Game(gMode, playerColor, board, socket, time) {
         if (draggingPiece) {
             const moveResult = draggingPiece.move(x, y)
             if (moveResult) {
+                if (mode === gamemode.puzzle) {
+                    if (puzzleMoveIndex === puzzle.moves.length - 1) {
+                        state = states.end
+                        try {
+                            solvedCallback()
+                        } catch (e) {}
+                        return
+                    }
+                    puzzleMoveIndex++
+                    nextPuzzleMove()
+                }
                 if (mode === gamemode.multiplayer && socket) {
                     socket.emit('move', new Move(+from.split('')[0], +from.split('')[1], x, y, moveResult === 'q' ? 'q' : undefined))
                 }
@@ -440,6 +575,10 @@ export function Game(gMode, playerColor, board, socket, time) {
     }
 
     function clearTiles(key) {
+        try {
+            board.querySelectorAll(`.${key}`).forEach(item => item.remove())
+        } catch (e) {}
+
         if (!tiles[key]) return
         tiles[key].forEach(tile => tile.element.remove())
         tiles[key].length = 0
@@ -617,6 +756,9 @@ export function Game(gMode, playerColor, board, socket, time) {
 
     function timeOut(lostColor) {
         if (state === states.playing) {
+            try {
+                board.querySelector(`.timer .timer-${lostColor}`).textContent = '0:00.00'
+            } catch (e) {}
             play.end()
             state = states.end
             showInfo(info.timeOut, lostColor === 'black' ? color.white : color.black)
@@ -795,10 +937,13 @@ export function Game(gMode, playerColor, board, socket, time) {
         clearTiles,
         stop,
         setGameMode,
+        getMode,
         setMoveTime,
         startPos,
         movePiece,
-        resign
+        resign,
+        getPuzzleMoveIndex,
+        getCurrentPuzzleMove
     }
 
 

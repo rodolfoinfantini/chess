@@ -14,3 +14,8 @@
  * Stockfish against itself
  * Create a MULTIPLAYER room to play with your friends!
 ![Game mode Screenshot](/screenshots/gamemode.png)
+
+### PUZZLES!
+ * 200,000 puzzles
+ * Filter by rating and theme
+![Puzzle Screenshot](/screenshots/puzzle.png)

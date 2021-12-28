@@ -7,7 +7,9 @@ import {
 import {
     type,
     color,
-    tile
+    tile,
+    gamemode,
+    moveString
 } from './constants.js'
 
 export default class Piece {
@@ -63,10 +65,23 @@ export default class Piece {
     move(x, y, force = false) {
         x = +x
         y = +y
+
         if (!this.canMove(x, y) && !force) {
             this.resetPosition()
             return false
         }
+
+        if (this.game.getMode() === gamemode.puzzle) {
+            const curMove = this.game.getCurrentPuzzleMove()
+            const moveStr = `${moveString['x' + this.x]}${moveString['y' + this.y]}${moveString['x' + x]}${moveString['y' + y]}`
+            if (curMove !== moveStr) {
+                setTimeout(() => {
+                    this.resetPosition()
+                }, 10)
+                return false
+            }
+        }
+
         this.game.clearTiles('move')
         this.game.clearTiles('selected')
         const oldHalfMoves = this.game.position.halfMoves
@@ -94,6 +109,20 @@ export default class Piece {
         let reverseCastling1 = false
         let reverseCastling2 = false
         if (this.type === type.king && this.hasMoved === false) {
+            if (x === 6 && this.game.castling[this.color === color.white ? 'K' : 'k'] === true) {
+                play.stop()
+                play.castle()
+                const rook = this.hasPiece(7, y)
+                rook.x = 5
+                rook.resetPosition()
+            } else if (x === 2 && this.game.castling[this.color === color.white ? 'K' : 'k'] === true) {
+                play.stop()
+                play.castle()
+                const rook = this.hasPiece(0, y)
+                rook.x = 3
+                rook.resetPosition()
+            }
+
             if (this.game.castling[this.color === color.white ? 'Q' : 'q'] === true) {
                 this.game.castling[this.color === color.white ? 'Q' : 'q'] = false
                 reverseCastling1 = this.color === color.white ? 'Q' : 'q'
@@ -101,19 +130,6 @@ export default class Piece {
             if (this.game.castling[this.color === color.white ? 'K' : 'k'] === true) {
                 this.game.castling[this.color === color.white ? 'K' : 'k'] = false
                 reverseCastling2 = this.color === color.white ? 'K' : 'k'
-            }
-            if (x === 6) {
-                play.stop()
-                play.castle()
-                const rook = this.hasPiece(7, y)
-                rook.x = 5
-                rook.resetPosition()
-            } else if (x === 2) {
-                play.stop()
-                play.castle()
-                const rook = this.hasPiece(0, y)
-                rook.x = 3
-                rook.resetPosition()
             }
         }
         this.game.enPassant.x = null
@@ -160,9 +176,7 @@ export default class Piece {
             returning = 'q'
         }
         this.game.setTurn(oppositeColor(this.game.getTurn()))
-        // this.game.turn = oppositeColor(this.game.turn)
         if (this.game.isCheck(this.game.getTurn())) {
-            console.log('check')
             const king = this.game.getPiecesOfType(type.king).find(piece => piece.color === this.game.getTurn())
             this.game.tiles.check.push(new Tile(king.x, king.y, this.boardElement, tile.check))
         }
@@ -182,7 +196,7 @@ export default class Piece {
         this.element.style.transform = `translateX(${this.x * 100}%) translateY(${this.y * 100}%)`
     }
     getImgSrc() {
-        return `assets/pieces/${this.color}-${this.type}.svg`
+        return `${location.pathname === '/' ? '' : '../'}assets/pieces/${this.color}-${this.type}.svg`
     }
     capture() {
         this.game.position.halfMoves = 0

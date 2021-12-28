@@ -14,15 +14,23 @@ import {
 import randStr from './modules/randomString.js'
 
 import Timer, {
-    msToSec,
-    timeString
+    msToSec
 } from './public/modules/timer.js'
+
+import {
+    randomPuzzle
+} from './modules/puzzle.js'
 
 const app = express()
 const server = http.createServer(app)
 const sockets = socketio(server)
 
 app.use(express.static('public'))
+
+app.get('/puzzle/random', (req, res) => {
+    res.json(randomPuzzle(req.query.minRating, req.query.maxRating, req.query.themes))
+})
+
 
 const games = {}
 
