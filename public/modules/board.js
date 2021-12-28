@@ -1,6 +1,6 @@
 const urlParams = new URLSearchParams(window.location.search)
 
-export function createBoard(appendTo = false, stopCallback) {
+export function createBoard(appendTo = false, stopCallback, socket) {
     const board = document.createElement('board')
     const coordsRows = document.createElement('coords')
     const coordsColumns = document.createElement('coords')
@@ -46,7 +46,7 @@ export function createBoard(appendTo = false, stopCallback) {
     if (urlParams.has('room')) {
         stopBtn.textContent = 'Resign'
         stopBtn.onclick = () => {
-            socket.emit('resign')
+            if (socket) socket.emit('resign')
         }
     } else {
         stopBtn.textContent = 'Stop'

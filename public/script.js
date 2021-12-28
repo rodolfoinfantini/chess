@@ -26,7 +26,7 @@ const gamemodeDiv = document.querySelector('div.play .gamemode')
 const board = createBoard(undefined, () => {
     if (game) game.startPos()
     gamemodeDiv.parentElement.classList.remove('hidden')
-})
+}, socket)
 
 
 socket.on('color', data => {
