@@ -120,5 +120,6 @@ export const info = {
     fiftyMoves: 'fiftyMoves',
     draw: 'draw',
     resign: 'resign',
-    timeOut: 'timeOut'
+    timeOut: 'timeOut',
+    playerDisconnected: 'playerDisconnected'
 }

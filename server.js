@@ -21,6 +21,8 @@ import {
     randomPuzzle
 } from './modules/puzzle.js'
 
+let log = false
+
 const app = express()
 const server = http.createServer(app)
 const sockets = socketio(server)
@@ -31,6 +33,13 @@ app.get('/puzzle/random', (req, res) => {
     res.json(randomPuzzle(req.query.minRating, req.query.maxRating, req.query.themes))
 })
 
+app.get('/log', (req, res) => {
+    log = !log
+    res.json({
+        log: log
+    })
+})
+
 
 const games = {}
 
@@ -39,12 +48,12 @@ function oppositeColor(color) {
 }
 
 sockets.on('connection', (socket) => {
-    console.log(`> Client connected ${socket.id}`)
+    if (log) console.log(`> Client connected ${socket.id}`)
 
     socket.on('join-room', (roomId) => {
         if (games[roomId]) {
             socket.emit('join-room', 'success')
-            console.log(`> Client joined room ${roomId}`)
+            if (log) console.log(`> Client joined room ${roomId}`)
             games[roomId].join(socket)
 
             socket.on('disconnect', () => {
@@ -76,7 +85,7 @@ sockets.on('connection', (socket) => {
         }
         const roomId = newId
         games[roomId] = Game(roomId, +time)
-        console.log(`> Room created ${roomId}`)
+        if (log) console.log(`> Room created ${roomId}`)
         socket.emit('create-room', roomId)
     })
 })
@@ -212,7 +221,7 @@ function Game(id, time) {
         if (players.black.socket !== null && players.white.socket !== null) {
             start()
         }
-        console.log(`> Player joined in room ${id}`)
+        if (log) console.log(`> Player joined in room ${id}`)
     }
 
     function leave(socket) {
@@ -222,7 +231,7 @@ function Game(id, time) {
             players.black.socket = null
         }
         sockets.to(id).emit('player-disconnected')
-        console.log(`> Player disconnected from room ${id}`)
+        if (log) console.log(`> Player left room ${id}`)
         endGame()
     }
 
@@ -306,7 +315,7 @@ function Game(id, time) {
     }
 
     function stop() {
-        console.log(`> Room ${id} closed`)
+        if (log) console.log(`> Room ${id} closed`)
         if (players.white.socket) players.white.socket.emit('reset')
         if (players.black.socket) players.black.socket.emit('reset')
         delete games[id]

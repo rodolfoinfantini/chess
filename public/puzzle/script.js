@@ -13,6 +13,13 @@ const minRating = form.querySelector('input.min')
 const maxRating = form.querySelector('input.max')
 const toggleBtns = form.querySelectorAll('.toggle')
 
+const curRating = document.querySelector('.filters > .puzzle-info .puzzle-rating span:last-child')
+const curThemes = document.querySelector('.filters > .puzzle-info .puzzle-themes span:last-child')
+
+const newPuzzleBtn = document.querySelector('.filters > .new-puzzle')
+
+const puzzlesFound = document.querySelector('.filters .puzzle-count')
+
 if (searchParams.has('minRating')) {
     minRating.value = searchParams.get('minRating')
 }
@@ -60,10 +67,18 @@ let game
 
 
 function solved() {
-    alert('Congratulations! You solved the puzzle!')
+    setTimeout(() => {
+        alert('Congratulations! You solved the puzzle!')
+        newPuzzle()
+    }, 400)
+}
+
+function newPuzzle() {
     if (game) game.stop()
     generatePuzzle()
 }
+
+newPuzzleBtn.onclick = newPuzzle
 
 
 async function generatePuzzle() {
@@ -74,6 +89,10 @@ async function generatePuzzle() {
         alert(puzzle.error)
         return
     }
+
+    curRating.textContent = puzzle.puzzle.rating
+    curThemes.textContent = puzzle.puzzle.themes.join(', ')
+    puzzlesFound.textContent = puzzle.found + ' puzzles found'
 
     game = PuzzleGame(puzzle.puzzle, board, solved)
 

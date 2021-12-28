@@ -13,15 +13,15 @@
 
 <body>
     <div class="filters">
-        <h1>Puzzle filter</h1>
+        <h1>Puzzle filter <a class="reset" href="?minRating=0&maxRating=0&themes=">Reset</a></h1>
         <form>
             <label>
                 Minimum rating
-                <input class="min" type="number" min="0" max="4000" value="800" placeholder="Minimum rating">
+                <input class="min" type="number" min="0" max="4000" value="0" placeholder="Minimum rating">
             </label>
             <label>
                 Maximum rating
-                <input class="max" type="number" min="0" max="4000" value="2000" placeholder="Maximum rating">
+                <input class="max" type="number" min="0" max="5000" value="0" placeholder="Maximum rating">
             </label>
             <div class="themes">
                 <h3>Themes</h3>
@@ -31,10 +31,26 @@
                     <div class="toggle" data-theme="advantage">Advantage</div>
                     <div class="toggle" data-theme="sacrifice">Sacrifice</div>
                     <div class="toggle" data-theme="oneMove">One Move</div>
+                    <div class="toggle" data-theme="promotion">Promotion</div>
                 </div>
             </div>
             <button class="apply">Apply</button>
+            <div class="puzzle-count">
+                500000 puzzles found
+            </div>
         </form>
+        <h2>Current puzzle</h2>
+        <div class="puzzle-info">
+            <div class="puzzle-rating">
+                <span>Rating:</span>
+                <span>800</span>
+            </div>
+            <div class="puzzle-themes">
+                <span>Themes:</span>
+                <span>mate</span>
+            </div>
+        </div>
+        <button class="new-puzzle">New puzzle</button>
     </div>
 </body>
 

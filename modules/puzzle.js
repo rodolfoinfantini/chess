@@ -51,7 +51,6 @@ for (let i = 0; i < puzzleDB.length; i++) {
     puzzles.push(new Puzzle(fen, moves, rating, themes))
 }
 
-
 function hasTheme(puzzle, themes) {
     let themeNumber = 0
     for (let i = 0; i < themes.length; i++) {

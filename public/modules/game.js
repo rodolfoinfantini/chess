@@ -752,7 +752,16 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         showInfo(info.resign, color)
     }
 
-    if (socket) socket.on('time-out', timeOut)
+    if (socket) {
+        socket.on('time-out', timeOut)
+        socket.on('player-disconnected', () => {
+            if (state === states.playing) {
+                play.end()
+                state = states.end
+                showInfo(info.playerDisconnected, player.color)
+            }
+        })
+    }
 
     function timeOut(lostColor) {
         if (state === states.playing) {
@@ -792,9 +801,16 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             h1.textContent = `${winner === color.white ? 'White' : 'Black'} wins.`
             p.textContent = `By time out.`
             // div.classList.replace(winner === color.white ? 'white' : 'black', winner === color.white ? 'black' : 'white')
+        } else if (infoType === info.playerDisconnected) {
+            h1.textContent = 'Player disconnected'
+            p.textContent = `${winner === color.white ? 'White' : 'Black'} is victorious.`
         } else {
             h1.textContent = 'Draw!'
             // p.textContent = 'By agreement.'
+        }
+        board.querySelector('.stop-btn').textContent = 'Exit'
+        board.querySelector('.stop-btn').onclick = () => {
+            location.search = ''
         }
         div.appendChild(h1)
         div.appendChild(p)

@@ -196,10 +196,6 @@ socket.on('reset', () => {
     location.search = ''
 })
 
-socket.on('player-disconnected', () => {
-    alert('Opponent disconnected')
-})
-
 socket.on('resign', (color) => {
     if (game) game.resign(color)
 })

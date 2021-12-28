@@ -1,6 +1,11 @@
 body {
-    flex-direction: row;
+    flex-direction: row-reverse;
     flex-wrap: wrap;
+}
+
+board .stop-btn,
+board .auto-flip {
+    display: none;
 }
 
 div.filters {
@@ -8,7 +13,11 @@ div.filters {
     background-color: #ccc;
     padding: 15px;
     border-radius: 5px;
-    max-width: 90%;
+    width: 90%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 div.filters input,
@@ -43,4 +52,21 @@ div.filters form {
 
 div.filters .selected {
     background-color: #aaa;
+}
+
+div.filters .selected::before {
+    content: '✓';
+    padding-right: 5px;
+}
+
+.puzzle-rating span:first-child,
+.puzzle-themes span:first-child {
+    font-weight: bold;
+}
+
+a.reset {
+    color: hsl(236, 78%, 33%);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.5rem;
 }
