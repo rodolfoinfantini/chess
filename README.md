@@ -7,11 +7,11 @@
  * En passant
  * Castling
  * Pawn promotion
- #### Draw
+ #### Draw:
  * By repetition
  * Fifty move
  * Stalemate
- 
+
  ![Checkmate Screenshot](/screenshots/checkmate.png)
 ### Select between 4 game modes:
  * Play over the board
