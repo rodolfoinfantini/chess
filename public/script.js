@@ -189,7 +189,7 @@ function createTimeSelector() {
     timeDiv.classList.add('time-selector')
     const timeInput = document.createElement('input')
     timeInput.type = 'range'
-    timeInput.min = '0'
+    timeInput.min = '1'
     timeInput.max = '38'
     timeInput.value = '14'
     timeInput.step = '1'
