@@ -1,9 +1,6 @@
 import express from 'express'
 import http from 'http'
 import socketio from 'socket.io'
-import {
-    v4 as uuidV4
-} from 'uuid'
 import stockfish from 'stockfish'
 
 import {
@@ -21,6 +18,63 @@ import {
     randomPuzzle
 } from './modules/puzzle.js'
 
+import {
+    mysqlQuery,
+    insertInto
+} from './modules/mysql.js'
+
+import {
+    encrypt
+} from './modules/encript.js'
+
+async function getEloFromToken(token) {
+    if (token == null) return null
+    const user = await mysqlQuery(`select * from users where token = '${token}'`)
+    if (user.length === 0) {
+        throw new Error('User not found')
+    }
+    return {
+        elo: user[0].elo,
+        username: user[0].username
+    }
+}
+
+async function login(username, password) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const encryptedPassword = encrypt(password)
+            const user = await mysqlQuery(`select * from users where username = '${username}' and password = '${encryptedPassword}'`)
+            if (user.length === 0) {
+                reject(new Error('Invalid username or password'))
+            }
+            let newToken = randStr(40)
+            const token = await mysqlQuery(`select token from users where token = '${newToken}'`)
+            if (token.length > 0) {
+                while (newToken === token[0].token) {
+                    newToken = randStr(10)
+                }
+            }
+            await mysqlQuery(`update users set token = '${newToken}' where username = '${username}' and password = '${encryptedPassword}'`)
+            resolve(newToken)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+async function insertToUsers(values) {
+    try {
+        await insertInto('users', values)
+    } catch (e) {
+        if (e.message.includes('Duplicate entry')) {
+            throw new Error('Username already exists')
+        } else {
+            throw e
+        }
+    }
+}
+
+
 let log = false
 
 const app = express()
@@ -28,6 +82,139 @@ const server = http.createServer(app)
 const sockets = socketio(server)
 
 app.use(express.static('public'))
+app.use(express.json())
+
+app.post('/account/login', (req, res) => {
+    let {
+        username,
+        password
+    } = req.body
+
+    username = username.trim()
+    password = password.trim()
+
+    if (username.length === 0) {
+        res.json({
+            success: false,
+            error: 'Username cannot be empty'
+        })
+        return
+    }
+    if (password.length === 0) {
+        res.json({
+            success: false,
+            error: 'Password cannot be empty'
+        })
+        return
+    }
+
+    login(username, password)
+        .then(token => {
+            if (token) {
+                res.json({
+                    success: true,
+                    token,
+                    username
+                })
+            } else {
+                res.json({
+                    success: false
+                })
+            }
+        }).catch(e => {
+            res.json({
+                success: false,
+                error: e.message
+            })
+        })
+})
+
+function validadeUsername(username) {
+    const reg = /[a-zA-Z0-9]{4,30}/
+    return reg.test(username)
+}
+
+function validadePassword(password) {
+    const reg = /.{8,40}/
+    return reg.test(password)
+}
+
+function validadeEmail(email) {
+    const reg = /\S+@\S+\.\S+/
+    return reg.test(email)
+}
+
+function error(message) {
+    return {
+        success: false,
+        error: message
+    }
+}
+
+app.post('/account/register', (req, res) => {
+    let {
+        username,
+        password,
+        confirmPassword,
+        email
+    } = req.body
+
+    username = username.trim()
+    password = password.trim()
+    confirmPassword = confirmPassword.trim()
+    email = email.trim()
+
+    //empty
+    if (username.length === 0) {
+        res.json(error("Username cannot be empty"))
+        return
+    }
+    if (password.length === 0) {
+        res.json(error("Password cannot be empty"))
+        return
+    }
+    if (email.length === 0) {
+        res.json(error("Email cannot be empty"))
+        return
+    }
+
+    //validation
+    if (!validadeUsername(username)) {
+        res.json(error("Username must have only letter and numbers and be between 4 and 30 characters"))
+        return
+    }
+    if (!validadePassword(password)) {
+        res.json(error("Password must be between 4 and 30 characters"))
+        return
+    }
+    if (!validadeEmail(email)) {
+        res.json(error("Email is not valid"))
+        return
+    }
+
+    //password match
+    if (password !== confirmPassword) {
+        res.json(error("Passwords don't match"))
+        return
+    }
+
+    password = encrypt(password)
+
+    insertToUsers({
+        username,
+        password,
+        email
+    }).then(() => {
+        res.json({
+            success: true
+        })
+    }).catch(e => {
+        res.json({
+            success: false,
+            error: e.message
+        })
+    })
+})
 
 app.get('/puzzle/random', (req, res) => {
     res.json(randomPuzzle(req.query.minRating, req.query.maxRating, req.query.themes))
@@ -50,11 +237,14 @@ function oppositeColor(color) {
 sockets.on('connection', (socket) => {
     if (log) console.log(`> Client connected ${socket.id}`)
 
-    socket.on('join-room', (roomId) => {
+    socket.on('join-room', ({
+        roomId,
+        token
+    }) => {
         if (games[roomId]) {
             socket.emit('join-room', 'success')
             if (log) console.log(`> Client joined room ${roomId}`)
-            games[roomId].join(socket)
+            games[roomId].join(socket, token)
 
             socket.on('disconnect', () => {
                 games[roomId].leave(socket)
@@ -64,7 +254,10 @@ sockets.on('connection', (socket) => {
         }
     })
 
-    socket.on('create-room', (time) => {
+    socket.on('create-room', ({
+        time,
+        rated
+    }) => {
         if (isNaN(time)) {
             socket.emit('create-room', 'error:Time must be a number')
             return
@@ -74,8 +267,8 @@ sockets.on('connection', (socket) => {
             socket.emit('create-room', 'error:Time must be greater than 10 seconds')
             return
         }
-        if (time > 3600) {
-            socket.emit('create-room', 'error:Time limit is 1 hour')
+        if (time > 10800) {
+            socket.emit('create-room', 'error:Time limit is 180 minutes')
             return
         }
 
@@ -84,7 +277,7 @@ sockets.on('connection', (socket) => {
             newId = randStr(10)
         }
         const roomId = newId
-        games[roomId] = Game(roomId, +time)
+        games[roomId] = Game(roomId, +time, !!rated)
         if (log) console.log(`> Room created ${roomId}`)
         socket.emit('create-room', roomId)
     })
@@ -113,24 +306,29 @@ function secToMs(sec) {
     return sec * 1000
 }
 
-function Game(id, time) {
+function Game(id, time, rated = false) {
+    console.log(time, rated)
     const gameTime = time
 
     const players = {
         white: {
             socket: null,
-            timer: new Timer(secToMs(gameTime))
+            timer: new Timer(secToMs(gameTime)),
+            token: null
         },
         black: {
             socket: null,
-            timer: new Timer(secToMs(gameTime))
+            timer: new Timer(secToMs(gameTime)),
+            token: null
         }
     }
 
     setInterval(() => {
         if (msToSec(players.white.timer.getTime()) <= 0) {
+            win('black')
             sockets.to(id).emit('time-out', 'white')
         } else if (msToSec(players.black.timer.getTime()) <= 0) {
+            win('white')
             sockets.to(id).emit('time-out', 'black')
         }
     }, 100)
@@ -150,10 +348,21 @@ function Game(id, time) {
                 invalidMove()
             }
         }
+        if (data == 'info depth 0 score mate 0') {
+            console.log(`> Room ${id}: Checkmate! ${turn === 'b' ? 'White' : 'Black'} is victorious`)
+            win(turn === 'b' ? 'white' : 'black')
+        }
     }
 
     engine.postMessage('ucinewgame')
     engine.postMessage('position startpos')
+
+    function win(color) {
+        if (players[color].token && rated) {
+            mysqlQuery(`update users set elo = elo + 10 where token = '${players[color].token}'`)
+            players[color].socket.emit('update-elo', 10)
+        }
+    }
 
     function notYourTurn(color) {
         if (players[color].socket) players[color].socket.emit('not-your-turn')
@@ -183,6 +392,7 @@ function Game(id, time) {
             players.black.timer.stop()
             players.white.timer.start()
         }
+        engine.postMessage(`go depth 1`)
         players[turn === 'b' ? 'black' : 'white'].socket.emit('move', new Move(from.x, from.y, to.x, to.y))
         sockets.to(id).emit('update-timers', {
             white: players.white.timer.getTime(),
@@ -206,15 +416,17 @@ function Game(id, time) {
         black: false
     }
 
-    function join(socket) {
+    function join(socket, token) {
         if (players.white.socket === null) {
             players.white.socket = socket
             players.white.timer = new Timer(secToMs(gameTime))
+            players.white.token = token
             socket.emit('color', 'white')
             socket.join(id)
         } else if (players.black.socket === null) {
             players.black.socket = socket
             players.black.timer = new Timer(secToMs(gameTime))
+            players.black.token = token
             socket.emit('color', 'black')
             socket.join(id)
         }
@@ -227,16 +439,24 @@ function Game(id, time) {
     function leave(socket) {
         if (players.white.socket === socket) {
             players.white.socket = null
+            players.white.token = null
         } else if (players.black.socket === socket) {
             players.black.socket = null
+            players.black.token = null
         }
         sockets.to(id).emit('player-disconnected')
         if (log) console.log(`> Player left room ${id}`)
         endGame()
     }
 
-    function start() {
-        sockets.to(id).emit('start', gameTime)
+    async function start() {
+        sockets.to(id).emit('start', {
+            gameTime,
+            players: {
+                white: await getEloFromToken(players.white.token),
+                black: await getEloFromToken(players.black.token)
+            }
+        })
 
         players.white.socket.on('move', ({
             from,
@@ -275,9 +495,11 @@ function Game(id, time) {
         })
 
         players.white.socket.on('resign', () => {
+            win('black')
             sockets.to(id).emit('resign', 'white')
         })
         players.black.socket.on('resign', () => {
+            win('white')
             sockets.to(id).emit('resign', 'black')
         })
     }

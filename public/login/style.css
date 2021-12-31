@@ -1,0 +1,112 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: none;
+    font-family: 'Roboto', Sans-Serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: hsl(45, 10%, 8%);
+    color: white;
+}
+
+div.form {
+    background: #262421;
+    padding: 50px 30px;
+    width: 95%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    position: relative;
+}
+
+div.form h1 {
+    font-weight: normal;
+    font-size: 1.8rem;
+    color: #bababa;
+}
+
+div.form form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 40px;
+}
+
+div.form form label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #bababa;
+}
+
+div.form form label input {
+    font-size: 1rem;
+    padding: 10px 15px;
+    background-color: #24221e;
+    border: 1px solid #404040;
+    border-radius: 3px;
+    color: #bababa;
+    outline-color: #3692e7;
+}
+
+div.form form button {
+    width: 100%;
+    padding: 14px 0 14px 0;
+    border-radius: 3px;
+    background: #3692e7;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 150ms;
+    font-size: 0.8rem;
+    user-select: none;
+}
+
+div.form form button:hover {
+    background: #56a3eb;
+}
+
+div.alternative {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+div.alternative a,
+div.form>a {
+    text-decoration: none;
+    font-size: 0.9rem;
+    color: #3692e7;
+    transition: color 150ms;
+}
+
+div.form>a {
+    font-size: 1.1rem;
+}
+
+div.alternative a:hover,
+div.form>a {
+    color: #56a3eb;
+}
+
+div.error {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    color: rgb(255, 112, 112);
+    text-align: center;
+    left: 0;
+}
