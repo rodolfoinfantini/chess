@@ -1,17 +1,13 @@
 import mysql from 'mysql2'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const options = {
-    local: {
-        host: 'localhost',
-        user: 'root',
-        password: 'root',
-        database: 'chess'
-    },
     ext: {
-        host: 'us-cdbr-east-05.cleardb.net',
-        user: 'b3c2b38fffe3cb',
-        password: '913a3d9a',
-        database: 'heroku_15d24b9c875a33d'
+        host: process.env.MYSQL_HOST,
+        user: process.env.MYSQL_USER,
+        password: process.env.MYSQL_PASSWORD,
+        database: process.env.MYSQL_DB
     }
 }
 
@@ -39,14 +35,17 @@ async function createTables() {
     //Users
     if (!(await tableExists('users'))) {
         await mysqlQuery(`CREATE TABLE users (
-            id INT NOT NULL AUTO_INCREMENT,
+            id BIGINT NOT NULL AUTO_INCREMENT,
             username VARCHAR(255) NOT NULL,
             email VARCHAR(255) NOT NULL,
             password VARCHAR(255) NOT NULL,
             token VARCHAR(255),
             elo INT NOT NULL DEFAULT 800,
+            matches BIGINT NOT NULL DEFAULT 0,
+            wins BIGINT NOT NULL DEFAULT 0,
             PRIMARY KEY (id),
-            UNIQUE (username)
+            UNIQUE (username),
+            UNIQUE (email)
         )`)
         console.log('> Created table users')
     } else {

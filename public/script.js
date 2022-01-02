@@ -13,10 +13,9 @@ import {
     createBoard
 } from './modules/board.js'
 
-const signInBtn = document.querySelector('header a.sign-in')
-const signOutBtn = document.querySelector('header button.sign-out')
 if (localStorage.getItem('token') && localStorage.getItem('username')) {
-    signInBtn.classList.add('hidden')
+    const signOutBtn = document.querySelector('header button.sign-out')
+    document.querySelector('header a.sign-in').classList.add('hidden')
 
     signOutBtn.onclick = () => {
         localStorage.removeItem('token')
@@ -31,23 +30,27 @@ if (localStorage.getItem('token') && localStorage.getItem('username')) {
 
 const socket = io('/')
 
-let playerColor
+let playerColor = color.white
 
 const urlParams = new URLSearchParams(window.location.search)
 const gamemodeDiv = document.querySelector('div.play .gamemode')
 
 const board = createBoard(undefined, () => {
     if (game) game.startPos()
-    gamemodeDiv.parentElement.classList.remove('hidden')
+    gamemodeDiv.parentElement.parentElement.classList.remove('hidden')
 }, socket)
+
+const placeholderBoard = createBoard(document.body)
 
 
 socket.on('color', data => {
     playerColor = data
     if (playerColor === 'black') {
         board.classList.add('flipped')
+        if (placeholderBoard) placeholderBoard.classList.add('flipped')
     } else {
         board.classList.remove('flipped')
+        if (placeholderBoard) placeholderBoard.classList.remove('flipped')
     }
 })
 
@@ -108,15 +111,24 @@ shareBtn.onclick = () => {
 waitingDiv.appendChild(shareBtn)
 
 if (urlParams.has('room')) {
-    gamemodeDiv.parentElement.classList.add('hidden')
+    gamemodeDiv.parentElement.parentElement.classList.add('hidden')
     socket.on('not-found', () => {
         alert('not found')
         window.location.search = ''
     })
+    socket.on('join-room', data => {
+        if (data.startsWith('error:')) {
+            alert(data.split(':')[1])
+            window.location.search = ''
+            return
+        }
+    })
     socket.emit('join-room', {
         roomId: urlParams.get('room'),
-        token: localStorage.getItem('token')
+        token: localStorage.getItem('token'),
+        color: sessionStorage.getItem('color') || "white"
     })
+    sessionStorage.removeItem('color')
     document.body.appendChild(waitingDiv)
 }
 
@@ -185,6 +197,9 @@ function indexToMinutes(i) {
 
 
 function createTimeSelector() {
+    const createGameDiv = document.createElement('div')
+    createGameDiv.classList.add('create-game')
+
     const timeDiv = document.createElement('div')
     timeDiv.classList.add('time-selector')
     const timeInput = document.createElement('input')
@@ -212,44 +227,104 @@ function createTimeSelector() {
         bold.textContent = indexToMinutes(timeInput.value)
     }
 
-    const ratedSelect = document.createElement('select')
+    let isRated = true
+
+    const btns = document.createElement('div')
+    btns.classList.add('btns')
+    const ratedButton = document.createElement('div')
+    ratedButton.classList.add('rated-btn', 'toggle', 'selected')
+    ratedButton.textContent = 'Rated'
+    const casualButton = document.createElement('div')
+    casualButton.classList.add('casual-btn', 'toggle')
+    casualButton.textContent = 'Casual'
+
+    ratedButton.onclick = () => {
+        isRated = true
+        ratedButton.classList.add('selected')
+        casualButton.classList.remove('selected')
+    }
+    casualButton.onclick = () => {
+        isRated = false
+        ratedButton.classList.remove('selected')
+        casualButton.classList.add('selected')
+    }
+
+    btns.appendChild(ratedButton)
+    btns.appendChild(casualButton)
+    /* const ratedSelect = document.createElement('select')
     const ratedOption = document.createElement('option')
     ratedOption.value = 'rated'
     ratedOption.textContent = 'Rated'
     ratedOption.selected = true
     const casualOption = document.createElement('option')
     casualOption.value = 'casual'
-    casualOption.textContent = 'Casual'
-    ratedSelect.appendChild(ratedOption)
-    ratedSelect.appendChild(casualOption)
+    casualOption.textContent = 'Casual' */
+    // ratedSelect.appendChild(ratedOption)
+    // ratedSelect.appendChild(casualOption)
 
     const ratedLabel = document.createElement('label')
     ratedLabel.textContent = 'Game mode'
-    ratedLabel.appendChild(ratedSelect)
+    ratedLabel.appendChild(btns)
+    ratedLabel.classList.add('game-mode')
+    // ratedLabel.appendChild(ratedSelect)
 
-    const createBtn = document.createElement('button')
+    const colorSelection = document.createElement('div')
+    colorSelection.classList.add('color-selection')
+
+    const blackSelection = document.createElement('button')
+    blackSelection.classList.add('color-btn', 'black')
+    blackSelection.onclick = () => createRoom('black')
+
+    const whiteSelection = document.createElement('button')
+    whiteSelection.classList.add('color-btn', 'white')
+    whiteSelection.onclick = () => createRoom('white')
+
+    const randomSelection = document.createElement('button')
+    randomSelection.classList.add('color-btn', 'random')
+    randomSelection.onclick = () => createRoom('random')
+
+    colorSelection.appendChild(blackSelection)
+    colorSelection.appendChild(randomSelection)
+    colorSelection.appendChild(whiteSelection)
+
+    function createRoom(color) {
+        if (creating) return
+        creating = true
+        if (color === 'random') {
+            color = Math.random() < 0.5 ? 'black' : 'white'
+        }
+        sessionStorage.setItem('color', color)
+        socket.emit('create-room', {
+            time: indexToMinutes(timeInput.value) * 60,
+            rated: isRated
+        })
+    }
+
+    /* const createBtn = document.createElement('button')
     createBtn.textContent = 'Create room'
     createBtn.onclick = () => {
         if (creating) return
         creating = true
         socket.emit('create-room', {
             time: indexToMinutes(timeInput.value) * 60,
-            rated: ratedSelect.value === 'rated'
+            rated: isRated
         })
-    }
+    } */
 
     const cancelBtn = document.createElement('button')
     cancelBtn.textContent = 'Cancel'
     cancelBtn.onclick = () => {
-        timeDiv.parentElement.removeChild(timeDiv)
+        createGameDiv.remove()
     }
 
     timeDiv.appendChild(timeLabel)
     timeDiv.appendChild(ratedLabel)
-    timeDiv.appendChild(createBtn)
+    // timeDiv.appendChild(createBtn)
+    timeDiv.appendChild(colorSelection)
     timeDiv.appendChild(cancelBtn)
 
-    return timeDiv
+    createGameDiv.appendChild(timeDiv)
+    return createGameDiv
 }
 
 gamemodeDiv.querySelectorAll('.toggle').forEach(el => {
@@ -261,7 +336,6 @@ gamemodeDiv.querySelectorAll('.toggle').forEach(el => {
     }
 })
 
-const placeholderBoard = createBoard(document.body)
 const placeholderGame = Game(gamemode.playerVsPlayer, color.white, placeholderBoard)
 
 const playBtn = document.querySelector('div.play button.play-btn')
@@ -277,7 +351,7 @@ function removeAllTiles() {
 }
 
 playBtn.onclick = () => {
-    gamemodeDiv.parentElement.classList.add('hidden')
+    gamemodeDiv.parentElement.parentElement.classList.add('hidden')
     const selectedBtn = gamemodeDiv.querySelector('.toggle.selected')
     const mode = selectedBtn.getAttribute('data-mode')
     if (game) game.stop()
@@ -294,6 +368,22 @@ socket.on('reset', () => {
 
 socket.on('resign', (color) => {
     if (game) game.resign(color)
+})
+
+socket.on('spectator', ({
+    fen,
+    gameTime
+}) => {
+    waitingDiv.remove()
+    placeholderGame.stop()
+    placeholderBoard.remove()
+    removeAllTiles()
+    if (game) game.stop()
+    game = Game(gamemode.spectator, playerColor, board, socket, +gameTime, {
+        fen
+    })
+    document.body.appendChild(board)
+    game.start()
 })
 
 socket.on('start', ({

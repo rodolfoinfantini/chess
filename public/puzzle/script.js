@@ -6,6 +6,21 @@ import {
     createBoard
 } from '../modules/board.js'
 
+if (localStorage.getItem('token') && localStorage.getItem('username')) {
+    const signOutBtn = document.querySelector('header button.sign-out')
+    document.querySelector('header a.sign-in').classList.add('hidden')
+
+    signOutBtn.onclick = () => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('username')
+        location.reload()
+    }
+
+    signOutBtn.textContent = `${localStorage.getItem('username')} | Sign out`
+
+    signOutBtn.classList.remove('hidden')
+}
+
 const searchParams = new URLSearchParams(location.search)
 
 const form = document.querySelector('.filters form')

@@ -102,7 +102,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         fen: '',
         movesHistory: 'position startpos moves',
         fenHistory: [],
-        fullMoves: 0,
+        fullMoves: 1,
         halfMoves: 0
     }
 
@@ -200,9 +200,20 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             if (data.running === 'white') {
                 timers.black.stop()
                 timers.white.start()
+                elements.white.classList.add('running')
+                elements.black.classList.remove('running')
+
+                if (player.color === 'white') document.title = 'Your turn - Chess'
+                else document.title = 'Waiting for opponent - Chess'
             } else if (data.running === 'black') {
                 timers.white.stop()
                 timers.black.start()
+                elements.black.classList.add('running')
+                elements.white.classList.remove('running')
+
+                if (player.color === 'black') document.title = 'Your turn - Chess'
+                else document.title = 'Waiting for opponent - Chess'
+
             } else {
                 timers.white.stop()
                 timers.black.stop()
@@ -245,7 +256,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             castling.k = true
             castling.Q = true
             castling.K = true
-            position.fullMoves = 0
+            position.fullMoves = 1
             position.halfMoves = 0
             turn = color.white
         } else {
@@ -376,6 +387,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         clientX,
         clientY
     }) => {
+        if (mode === gamemode.spectator) return
+
         clearTiles('selected')
         clearTiles('move')
 
@@ -423,6 +436,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         }
     }
     board.onmouseleave = () => {
+        if (mode === gamemode.spectator) return
         resetAllPieces()
         isClicking = false
         if (ghostPiece) {
@@ -436,6 +450,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         clientX,
         clientY
     }) => {
+        if (mode === gamemode.spectator) return
         if (state !== states.playing) return
         if (!isClicking) return
         isClicking = false
@@ -470,6 +485,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     function move(clientX, clientY) {
+        if (mode === gamemode.spectator) return
         if (!draggingPiece) return
         const boardRect = getClientRect()
         const pos = {
@@ -754,11 +770,11 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     if (socket) {
         socket.on('time-out', timeOut)
-        socket.on('player-disconnected', () => {
+        socket.on('player-disconnected', (color) => {
             if (state === states.playing) {
                 play.end()
                 state = states.end
-                showInfo(info.playerDisconnected, player.color)
+                showInfo(info.playerDisconnected, color === 'black' ? 'white' : 'black')
             }
         })
     }
@@ -789,7 +805,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             p.textContent = 'By repetition.'
         } else if (infoType === info.fiftyMoves) {
             h1.textContent = 'Draw!'
-            p.textContent = 'By the fifty moves rule.'
+            p.textContent = 'By the fifty move rule.'
         } else if (infoType === info.stalemate) {
             h1.textContent = 'Draw!'
             p.textContent = 'By stalemate.'
@@ -818,7 +834,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         const buttons = document.createElement('div')
         buttons.classList.add('buttons')
 
-        if (mode !== gamemode.multiplayer) {
+        if (mode !== gamemode.multiplayer && mode !== gamemode.spectator) {
             const restartBtn = document.createElement('button')
             restartBtn.textContent = 'Restart'
             restartBtn.onclick = () => {
@@ -826,7 +842,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                 div.remove()
             }
             buttons.appendChild(restartBtn)
-        } else {
+        } else if (mode === gamemode.multiplayer) {
             let requesting = false
             const rematchBtn = document.createElement('button')
             rematchBtn.textContent = 'Rematch'
@@ -840,6 +856,10 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             socket.on('accepted-rematch', () => {
                 restart()
                 div.remove()
+                board.querySelector('.stop-btn').textContent = 'Resign'
+                board.querySelector('.stop-btn').onclick = () => {
+                    if (socket) socket.emit('resign')
+                }
             })
 
             socket.on('request-rematch', () => {
@@ -865,7 +885,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
         buttons.appendChild(closeBtn)
 
-        if (mode === gamemode.multiplayer) {
+        if (mode === gamemode.multiplayer || mode === gamemode.spectator) {
             const exitBtn = document.createElement('button')
             exitBtn.textContent = 'Exit'
             exitBtn.onclick = () => {

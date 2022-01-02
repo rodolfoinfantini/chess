@@ -53,10 +53,28 @@ export function msToSec(ms) {
     return (ms / 1000).toFixed(2)
 }
 
-export function timeString(time) {
-    const minutes = Math.floor(time / 60)
+
+//convert seconds to hours, minutes, seconds, show hours only if needed
+export function timeString(seconds) {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds - hours * 3600) / 60)
+    const secondsLeft = seconds - hours * 3600 - minutes * 60
+    let timeString = ''
+    if (hours > 0) {
+        timeString += hours + ':'
+    }
+    if (minutes < 10) {
+        timeString += '0'
+    }
+    timeString += minutes + ':'
+    if (secondsLeft < 10) {
+        timeString += '0'
+    }
+    timeString += secondsLeft.toFixed(1)
+    return timeString
+    /* const minutes = Math.floor(time / 60)
     const seconds = (time % 60).toFixed(2)
-    return `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`
+    return `${minutes}:${seconds < 10 ? '0' + seconds : seconds}` */
 }
 
 export function secToMs(sec) {

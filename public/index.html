@@ -14,18 +14,24 @@
 
 <body>
     <header>
+        <a href="/">PLAY</a>
+        <a href="/puzzle">PUZZLES</a>
         <a href="/login" class="sign-in">SIGN IN</a>
         <button class="sign-out hidden"></button>
     </header>
     <div class="play">
-        <button class="puzzle"><a href="/puzzle">Puzzle</a></button>
-        <button class="create-room">Create multiplayer room</button>
-        <div class="gamemode">
-            <button data-mode="playerVsPlayer" class="toggle selected">Player vs. Player</button>
-            <button data-mode="playerVsComputer" class="toggle">Player vs. Computer</button>
-            <button data-mode="computerVsComputer" class="toggle">Computer vs. Computer</button>
+        <div class="content">
+            <h2>Play Online</h2>
+            <button class="create-room">Play with a friend</button>
+            <button class="puzzle"><a href="/puzzle">Puzzle</a></button>
+            <h2>Play Offline</h2>
+            <div class="gamemode">
+                <button data-mode="playerVsPlayer" class="toggle selected">Player vs. Player</button>
+                <button data-mode="playerVsComputer" class="toggle">Player vs. Computer</button>
+                <button data-mode="computerVsComputer" class="toggle">Computer vs. Computer</button>
+            </div>
+            <button class="play-btn">Play</button>
         </div>
-        <button class="play-btn">Play</button>
     </div>
 </body>
 

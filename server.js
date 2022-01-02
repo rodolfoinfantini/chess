@@ -27,6 +27,13 @@ import {
     encrypt
 } from './modules/encript.js'
 
+const app = express()
+const server = http.createServer(app)
+const sockets = socketio(server)
+
+app.use(express.static('public'))
+app.use(express.json())
+
 async function getEloFromToken(token) {
     if (token == null) return null
     const user = await mysqlQuery(`select * from users where token = '${token}'`)
@@ -67,7 +74,8 @@ async function insertToUsers(values) {
         await insertInto('users', values)
     } catch (e) {
         if (e.message.includes('Duplicate entry')) {
-            throw new Error('Username already exists')
+            if (e.message.includes('username')) throw new Error('Username already registered')
+            else if (e.message.includes('email')) throw new Error('Email already registered')
         } else {
             throw e
         }
@@ -76,13 +84,6 @@ async function insertToUsers(values) {
 
 
 let log = false
-
-const app = express()
-const server = http.createServer(app)
-const sockets = socketio(server)
-
-app.use(express.static('public'))
-app.use(express.json())
 
 app.post('/account/login', (req, res) => {
     let {
@@ -130,13 +131,12 @@ app.post('/account/login', (req, res) => {
 })
 
 function validadeUsername(username) {
-    const reg = /[a-zA-Z0-9]{4,30}/
-    return reg.test(username)
+    const reg = /[a-zA-Z0-9]+/
+    return reg.test(username) && username.length >= 4 && username.length <= 20
 }
 
 function validadePassword(password) {
-    const reg = /.{8,40}/
-    return reg.test(password)
+    return password.length >= 6 && password.length <= 30
 }
 
 function validadeEmail(email) {
@@ -180,11 +180,11 @@ app.post('/account/register', (req, res) => {
 
     //validation
     if (!validadeUsername(username)) {
-        res.json(error("Username must have only letter and numbers and be between 4 and 30 characters"))
+        res.json(error("Username must have only letter and numbers and be between 4 and 20 characters"))
         return
     }
     if (!validadePassword(password)) {
-        res.json(error("Password must be between 4 and 30 characters"))
+        res.json(error("Password must be between 6 and 30 characters"))
         return
     }
     if (!validadeEmail(email)) {
@@ -239,15 +239,16 @@ sockets.on('connection', (socket) => {
 
     socket.on('join-room', ({
         roomId,
-        token
+        token,
+        color
     }) => {
         if (games[roomId]) {
             socket.emit('join-room', 'success')
             if (log) console.log(`> Client joined room ${roomId}`)
-            games[roomId].join(socket, token)
+            games[roomId].join(socket, token, color)
 
             socket.on('disconnect', () => {
-                games[roomId].leave(socket)
+                if (games[roomId]) games[roomId].leave(socket)
             })
         } else {
             socket.emit('not-found')
@@ -307,8 +308,11 @@ function secToMs(sec) {
 }
 
 function Game(id, time, rated = false) {
-    console.log(time, rated)
+    let state = 0
+
     const gameTime = time
+
+    let fen = `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
 
     const players = {
         white: {
@@ -341,6 +345,7 @@ function Game(id, time, rated = false) {
     engine.onmessage = (data) => {
         data = data + ''
         if (data.startsWith('Fen:')) {
+            fen = data.split(':')[1].trim()
             const curTurn = data.split(' ')[2]
             if (curTurn === turn) {
                 validMove()
@@ -394,6 +399,7 @@ function Game(id, time, rated = false) {
         }
         engine.postMessage(`go depth 1`)
         players[turn === 'b' ? 'black' : 'white'].socket.emit('move', new Move(from.x, from.y, to.x, to.y))
+        sockets.to(id + '-spectator').emit('move', new Move(from.x, from.y, to.x, to.y))
         sockets.to(id).emit('update-timers', {
             white: players.white.timer.getTime(),
             black: players.black.timer.getTime(),
@@ -416,40 +422,81 @@ function Game(id, time, rated = false) {
         black: false
     }
 
-    function join(socket, token) {
-        if (players.white.socket === null) {
-            players.white.socket = socket
-            players.white.timer = new Timer(secToMs(gameTime))
-            players.white.token = token
-            socket.emit('color', 'white')
-            socket.join(id)
-        } else if (players.black.socket === null) {
-            players.black.socket = socket
-            players.black.timer = new Timer(secToMs(gameTime))
-            players.black.token = token
-            socket.emit('color', 'black')
-            socket.join(id)
+    function join(socket, token, color) {
+        if (players.white.token === token || players.black.token === token) {
+            socket.emit('join-room', 'error:You are already in this room')
+            return
         }
-        if (players.black.socket !== null && players.white.socket !== null) {
-            start()
+        let joined = false
+        if (state === 0) {
+            if (!color) {
+                if (players.white.socket === null) {
+                    joined = true
+                    players.white.socket = socket
+                    players.white.timer = new Timer(secToMs(gameTime))
+                    players.white.token = token
+                    socket.emit('color', 'white')
+                    socket.join(id)
+                } else if (players.black.socket === null) {
+                    joined = true
+                    players.black.socket = socket
+                    players.black.timer = new Timer(secToMs(gameTime))
+                    players.black.token = token
+                    socket.emit('color', 'black')
+                    socket.join(id)
+                }
+            } else {
+                if (players[color].socket === null) {
+                    joined = true
+                    players[color].socket = socket
+                    players[color].timer = new Timer(secToMs(gameTime))
+                    players[color].token = token
+                    socket.emit('color', color)
+                    socket.join(id)
+                } else if (players[oppositeColor(color)].socket === null) {
+                    joined = true
+                    players[oppositeColor(color)].socket = socket
+                    players[oppositeColor(color)].timer = new Timer(secToMs(gameTime))
+                    players[oppositeColor(color)].token = token
+                    socket.emit('color', oppositeColor(color))
+                    socket.join(id)
+                }
+            }
+        }
+        if (!joined) {
+            socket.join(id)
+            socket.join(id + '-spectator')
+            socket.emit('spectator', {
+                fen: fen,
+                gameTime: gameTime
+            })
+        } else {
+            if (players.black.socket !== null && players.white.socket !== null) {
+                start()
+            }
         }
         if (log) console.log(`> Player joined in room ${id}`)
     }
 
     function leave(socket) {
         if (players.white.socket === socket) {
+            console.log(`> Room ${id}: White player disconnected`)
             players.white.socket = null
             players.white.token = null
+            sockets.to(id).emit('player-disconnected', 'white')
         } else if (players.black.socket === socket) {
+            console.log(`> Room ${id}: Black player disconnected`)
             players.black.socket = null
             players.black.token = null
+            sockets.to(id).emit('player-disconnected', 'black')
         }
-        sockets.to(id).emit('player-disconnected')
         if (log) console.log(`> Player left room ${id}`)
         endGame()
     }
 
     async function start() {
+        state = 1
+
         sockets.to(id).emit('start', {
             gameTime,
             players: {

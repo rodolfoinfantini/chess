@@ -104,7 +104,8 @@ export const gamemode = {
     playerVsComputer: 'playerVsComputer',
     computerVsComputer: 'computerVsComputer',
     multiplayer: 'multiplayer',
-    puzzle: 'puzzle'
+    puzzle: 'puzzle',
+    spectator: 'spectator'
 }
 
 export const state = {
