@@ -26,17 +26,36 @@
     <div class="play">
         <div class="content">
             <h2>Play Online</h2>
-            <button class="create-room">Play with a friend</button>
+            <button class="create-room">Create Game</button>
+            <button class="join-room">Join Game</button>
             <button class="puzzle"><a href="/puzzle">Puzzle</a></button>
             <h2>Play Offline</h2>
             <div class="gamemode">
-                <button data-mode="playerVsPlayer" class="toggle selected">Player vs. Player</button>
-                <button data-mode="playerVsComputer" class="toggle">Player vs. Computer</button>
+                <button data-mode="playerVsPlayer" class="toggle selected">Over the board</button>
+                <button data-mode="playerVsComputer" class="toggle">Play with the computer</button>
                 <button data-mode="computerVsComputer" class="toggle">Computer vs. Computer</button>
             </div>
             <button class="play-btn">Play</button>
         </div>
     </div>
+    <template id="join-template">
+        <div class="join-game">
+            <div class="inner">
+                <h2>Join Game</h2>
+                <div class="game-list">
+                    <table>
+                        <tr>
+                            <th>Player</th>
+                            <th>Elo</th>
+                            <th>Time</th>
+                            <th></th>
+                        </tr>
+                    </table>
+                </div>
+                <button class="cancel-btn">X</button>
+            </div>
+        </div>
+    </template>
 </body>
 
 </html>

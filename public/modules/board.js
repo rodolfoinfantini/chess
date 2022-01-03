@@ -45,7 +45,7 @@ export function createBoard(appendTo = false, stopCallback, socket) {
     let stopBtn = document.createElement('button')
     stopBtn.classList.add('stop-btn')
 
-    if (urlParams.has('room')) {
+    if (urlParams.has('r')) {
         stopBtn.textContent = 'Resign'
         stopBtn.onclick = () => {
             if (socket) socket.emit('resign')
@@ -75,7 +75,7 @@ export function createBoard(appendTo = false, stopCallback, socket) {
 
 
     options.appendChild(flipBtn)
-    if (!urlParams.has('room')) options.appendChild(label)
+    if (!urlParams.has('r')) options.appendChild(label)
     options.appendChild(stopBtn)
     // options.appendChild(playingAs)
     // options.appendChild(colorToMove)

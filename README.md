@@ -1,6 +1,9 @@
 # Chess!
 ## Vanilla JS Chess with Stockfish and MULTIPLAYER!
 [Click here to Play it!](https://vorak-chess.herokuapp.com/)
+
+### Demo
+<video src="/screenshots/demo.mp4"></video>
 ### All rules implemented:
  * Pieces movement
  * Check and checkmate
@@ -20,7 +23,14 @@
  * Create a MULTIPLAYER room to play with your friends!
 ![Game mode Screenshot](/screenshots/gamemode.png)
 
+### Create and Join Multiplayer Games
+![Create Game Screenshot](/screenshots/creategame.png)
+![Join Game Screenshot](/screenshots/joingame.png)
 ### PUZZLES!
  * 300,000 puzzles
  * Filter by rating and theme
 ![Puzzle Screenshot](/screenshots/puzzle.png)
+
+### Login and Register
+![Login Screenshot](/screenshots/signin.png)
+![Register Screenshot](/screenshots/register.png)

@@ -296,6 +296,36 @@ function createTimeSelector() {
     ratedLabel.classList.add('game-mode')
     // ratedLabel.appendChild(ratedSelect)
 
+    let isPublic = true
+
+    const visBtns = document.createElement('div')
+    visBtns.classList.add('btns')
+    const publicButton = document.createElement('div')
+    publicButton.classList.add('public-btn', 'toggle', 'selected')
+    publicButton.textContent = 'Public'
+    const privateButton = document.createElement('div')
+    privateButton.classList.add('private-btn', 'toggle')
+    privateButton.textContent = 'Private'
+
+    publicButton.onclick = () => {
+        isPublic = true
+        publicButton.classList.add('selected')
+        privateButton.classList.remove('selected')
+    }
+    privateButton.onclick = () => {
+        isPublic = false
+        publicButton.classList.remove('selected')
+        privateButton.classList.add('selected')
+    }
+
+    visBtns.appendChild(publicButton)
+    visBtns.appendChild(privateButton)
+
+    const visLabel = document.createElement('label')
+    visLabel.textContent = 'Visibility'
+    visLabel.appendChild(visBtns)
+    visLabel.classList.add('visibility')
+
     const colorSelection = document.createElement('div')
     colorSelection.classList.add('color-selection')
 
@@ -324,20 +354,10 @@ function createTimeSelector() {
         sessionStorage.setItem('color', color)
         socket.emit('create-room', {
             time: indexToMinutes(timeInput.value) * 60,
-            rated: isRated
+            rated: !!isRated,
+            isPublic
         })
     }
-
-    /* const createBtn = document.createElement('button')
-    createBtn.textContent = 'Create room'
-    createBtn.onclick = () => {
-        if (creating) return
-        creating = true
-        socket.emit('create-room', {
-            time: indexToMinutes(timeInput.value) * 60,
-            rated: isRated
-        })
-    } */
 
     const cancelBtn = document.createElement('button')
     cancelBtn.textContent = 'X'
@@ -348,7 +368,7 @@ function createTimeSelector() {
 
     timeDiv.appendChild(timeLabel)
     timeDiv.appendChild(ratedLabel)
-    // timeDiv.appendChild(createBtn)
+    timeDiv.appendChild(visLabel)
     timeDiv.appendChild(colorSelection)
     timeDiv.appendChild(cancelBtn)
 
@@ -440,3 +460,56 @@ socket.on('move', ({
 }) => {
     game.movePiece(from, to)
 })
+
+const joinBtn = document.querySelector('div.play button.join-room')
+const joinTemplate = document.querySelector('#join-template')
+
+joinBtn.onclick = async () => {
+    const joinDiv = document.importNode(joinTemplate.content.firstElementChild, true)
+    const table = joinDiv.querySelector('table')
+    const cancelBtn = joinDiv.querySelector('button.cancel-btn')
+    cancelBtn.onclick = () => {
+        joinDiv.remove()
+    }
+    document.body.appendChild(joinDiv)
+    const rooms = await getRooms()
+    for (const room of rooms) {
+        const row = document.createElement('tr')
+
+        const player = document.createElement('td')
+        const elo = document.createElement('td')
+        const time = document.createElement('td')
+        const join = document.createElement('td')
+
+        const aJoin = document.createElement('a')
+
+        player.textContent = room.player.username
+        elo.textContent = room.player.elo
+        time.textContent = +room.time / 60 + ' m'
+        aJoin.href = `?r=${room.roomId}`
+        aJoin.textContent = 'Join'
+        join.appendChild(aJoin)
+
+        row.onclick = () => {
+            location.href = aJoin.href
+        }
+
+        row.appendChild(player)
+        row.appendChild(elo)
+        row.appendChild(time)
+        row.appendChild(join)
+
+        table.appendChild(row)
+    }
+}
+
+function getRooms() {
+    return new Promise((resolve, reject) => {
+        socket.on('get-rooms', rooms => {
+            resolve(rooms)
+        })
+        socket.emit('get-rooms')
+    })
+}
+
+// joinBtn.click()

@@ -233,6 +233,11 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             elements.timer.black.textContent = strings.black
         }, 100)
 
+        socket.on('update-elo', data => {
+            data = +data
+            elements.info[player.color].elo.textContent = (+elements.info[player.color].elo.textContent + data) + ''
+        })
+
         socket.on('update-timers', data => {
             if (data.running === 'white') {
                 timers.black.stop()
@@ -267,12 +272,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                     document.title = 'Chess'
                 }
             }
-            console.log('old white', timers.white.getTime())
-            console.log('old black', timers.black.getTime())
             timers.black.setTime(+data.black)
             timers.white.setTime(+data.white)
-            console.log('new white', timers.white.getTime())
-            console.log('new black', timers.black.getTime())
         })
     }
 
@@ -733,8 +734,6 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
         //halfMoves and fullMoves
         fen += ' ' + position.halfMoves + ' ' + position.fullMoves
-
-        // console.log('fen:', fen)
 
         return fen
     }

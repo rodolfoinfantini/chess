@@ -267,9 +267,23 @@ sockets.on('connection', (socket) => {
         }
     })
 
+    socket.on('get-rooms', () => {
+        const rooms = []
+        for (const roomId in games) {
+            if (!games[roomId].isPublic) continue
+            rooms.push({
+                roomId,
+                player: games[roomId].getOwnerInfo(),
+                time: games[roomId].getTime()
+            })
+        }
+        socket.emit('get-rooms', rooms)
+    })
+
     socket.on('create-room', ({
         time,
-        rated
+        rated,
+        isPublic
     }) => {
         if (isNaN(time)) {
             socket.emit('create-room', 'error:Time must be a number')
@@ -290,7 +304,7 @@ sockets.on('connection', (socket) => {
             newId = randStr(10)
         }
         const roomId = newId
-        games[roomId] = Game(roomId, +time, !!rated)
+        games[roomId] = Game(roomId, +time, !!rated, !!isPublic)
         console.log(`> Room created ${roomId}`)
         socket.emit('create-room', roomId)
     })
@@ -319,10 +333,23 @@ function secToMs(sec) {
     return sec * 1000
 }
 
-function Game(id, time, rated = false) {
+function Game(id, time, rated = false, isPublic = false) {
     let state = 0
 
+    const roomOwner = {
+        username: null,
+        elo: null
+    }
+
+    function getOwnerInfo() {
+        return roomOwner
+    }
+
     const gameTime = time
+
+    function getTime() {
+        return gameTime
+    }
 
     let fen = `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
 
@@ -380,6 +407,9 @@ function Game(id, time, rated = false) {
         if (players[color].token && rated) {
             mysqlQuery(`update users set elo = elo + 10 where token = '${players[color].token}'`)
             players[color].socket.emit('update-elo', 10)
+        } else if (players[oppositeColor(color)].token && rated) {
+            mysqlQuery(`update users set elo = elo - 10 where token = '${players[oppositeColor(color)].token}'`)
+            players[oppositeColor(color)].socket.emit('update-elo', -10)
         }
     }
 
@@ -436,7 +466,7 @@ function Game(id, time, rated = false) {
         black: false
     }
 
-    function join(socket, token, color) {
+    async function join(socket, token, color) {
         if (state === 3) {
             socket.emit('join-room', 'error:Game already finished')
             return
@@ -471,6 +501,11 @@ function Game(id, time, rated = false) {
                     players[color].token = token
                     socket.emit('color', color)
                     socket.join(id)
+                    if (roomOwner.username === null) {
+                        const info = await getEloFromToken(token)
+                        roomOwner.username = info.username || 'Anonymous'
+                        roomOwner.elo = info.elo || '800?'
+                    }
                 } else if (players[oppositeColor(color)].socket === null) {
                     joined = true
                     players[oppositeColor(color)].socket = socket
@@ -478,6 +513,11 @@ function Game(id, time, rated = false) {
                     players[oppositeColor(color)].token = token
                     socket.emit('color', oppositeColor(color))
                     socket.join(id)
+                    if (roomOwner.username === null) {
+                        const info = await getEloFromToken(token)
+                        roomOwner.username = info.username || 'Anonymous'
+                        roomOwner.elo = info.elo || '800?'
+                    }
                 }
             }
         }
@@ -514,6 +554,12 @@ function Game(id, time, rated = false) {
     }
 
     function leave(socket) {
+        if (state === 0 || state === 2) {
+            players.white.socket = null
+            players.black.socket = null
+            stop()
+            return
+        }
         if (players.white.socket === socket) {
             if (state === 1) {
                 state = 2
@@ -632,11 +678,13 @@ function Game(id, time, rated = false) {
         delete games[id]
     }
 
-
     return {
         join,
         leave,
-        stop
+        stop,
+        isPublic,
+        getOwnerInfo,
+        getTime
     }
 }
 
