@@ -41,7 +41,7 @@ export default class Timer {
     }
 
     getTime() {
-        if (!this.startTime) return this.maxTime
+        if (!this.startTime) return this.overallTime
         if (this.isRunning) {
             return this.overallTime - this.getElapsedTimeSinceLastStart()
         }

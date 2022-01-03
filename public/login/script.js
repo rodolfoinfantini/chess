@@ -2,6 +2,7 @@
 
 const form = document.querySelector('div.form form')
 const error = document.querySelector('div.error')
+const signInBtn = form.querySelector('button.submit')
 
 let wait = false
 
@@ -9,6 +10,8 @@ form.onsubmit = async e => {
     e.preventDefault()
     if (wait) return
     wait = true
+
+    signInBtn.innerHTML = '<div class="spinner white"></div>'
 
     const options = {
         method: 'POST',
@@ -32,5 +35,6 @@ form.onsubmit = async e => {
     }
 
     error.textContent = data.error
+    signInBtn.textContent = 'SIGN IN'
     wait = false
 }

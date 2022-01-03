@@ -1,3 +1,5 @@
+@import url(../modules/css/spinner.css);
+
 * {
     margin: 0;
     padding: 0;
@@ -109,4 +111,11 @@ div.error {
     color: rgb(255, 112, 112);
     text-align: center;
     left: 0;
+}
+
+button.submit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60px;
 }

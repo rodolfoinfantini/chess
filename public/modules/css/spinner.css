@@ -1,0 +1,33 @@
+.spinner {
+    width: 30px;
+    height: 30px;
+}
+
+.spinner::after {
+    content: '';
+    display: block;
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+    border: 2px solid transparent;
+    border-top-color: #3692e7;
+    animation: spinner 1.2s linear infinite;
+}
+
+.spinner.white::after {
+    border-top-color: #fff;
+}
+
+.spinner.black::after {
+    border-top-color: #000;
+}
+
+@keyframes spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

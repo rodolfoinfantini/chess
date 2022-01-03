@@ -258,8 +258,21 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                 timers.white.stop()
                 timers.black.stop()
             }
+            if (mode === gamemode.spectator) {
+                if (data.running === 'white') {
+                    document.title = 'White to move - Chess'
+                } else if (data.running === 'black') {
+                    document.title = 'Black to move - Chess'
+                } else {
+                    document.title = 'Chess'
+                }
+            }
+            console.log('old white', timers.white.getTime())
+            console.log('old black', timers.black.getTime())
             timers.black.setTime(+data.black)
             timers.white.setTime(+data.white)
+            console.log('new white', timers.white.getTime())
+            console.log('new black', timers.black.getTime())
         })
     }
 

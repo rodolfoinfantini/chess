@@ -13,6 +13,33 @@ import {
     createBoard
 } from './modules/board.js'
 
+import {
+    ping
+} from './modules/ping.js'
+
+ping.config(document.querySelector('.ping-wrapper .ping-value'), 5000, {
+    good: {
+        color: '#00cc00',
+        min: 0,
+        max: 150
+    },
+    medium: {
+        color: '#ffcc00',
+        min: 150,
+        max: 400
+    },
+    bad: {
+        color: '#cc0000',
+        min: 401,
+        max: 800
+    },
+    veryBad: {
+        color: '#770000',
+        min: 801,
+        max: Infinity
+    }
+})
+
 if (localStorage.getItem('token') && localStorage.getItem('username')) {
     const signOutBtn = document.querySelector('header button.sign-out')
     document.querySelector('header a.sign-in').classList.add('hidden')
@@ -110,7 +137,7 @@ shareBtn.onclick = () => {
 }
 waitingDiv.appendChild(shareBtn)
 
-if (urlParams.has('room')) {
+if (urlParams.has('r')) {
     gamemodeDiv.parentElement.parentElement.classList.add('hidden')
     socket.on('not-found', () => {
         alert('not found')
@@ -124,7 +151,7 @@ if (urlParams.has('room')) {
         }
     })
     socket.emit('join-room', {
-        roomId: urlParams.get('room'),
+        roomId: urlParams.get('r'),
         token: localStorage.getItem('token'),
         color: sessionStorage.getItem('color') || "white"
     })
@@ -144,7 +171,7 @@ createRoomButton.onclick = () => {
             return
         }
         const urlParams = new URLSearchParams(window.location.search)
-        urlParams.set('room', roomId)
+        urlParams.set('r', roomId)
         window.location.search = urlParams.toString()
     })
     document.body.appendChild(createTimeSelector())
@@ -203,6 +230,7 @@ function createTimeSelector() {
     const timeDiv = document.createElement('div')
     timeDiv.classList.add('time-selector')
     const timeInput = document.createElement('input')
+    timeInput.classList.add('range')
     timeInput.type = 'range'
     timeInput.min = '1'
     timeInput.max = '38'
@@ -312,7 +340,8 @@ function createTimeSelector() {
     } */
 
     const cancelBtn = document.createElement('button')
-    cancelBtn.textContent = 'Cancel'
+    cancelBtn.textContent = 'X'
+    cancelBtn.classList.add('cancel-btn')
     cancelBtn.onclick = () => {
         createGameDiv.remove()
     }

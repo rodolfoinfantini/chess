@@ -35,13 +35,18 @@ app.use(express.static('public'))
 app.use(express.json())
 
 async function getEloFromToken(token) {
-    if (token == null) return {
-        elo: null,
-        username: null
+    if (!token) {
+        return {
+            elo: null,
+            username: null
+        }
     }
     const user = await mysqlQuery(`select * from users where token = '${token}'`)
     if (user.length === 0) {
-        throw new Error('User not found')
+        return {
+            elo: null,
+            username: null
+        }
     }
     return {
         elo: user[0].elo,
@@ -87,6 +92,10 @@ async function insertToUsers(values) {
 
 
 let log = false
+
+app.get('/ping', (req, res) => {
+    res.send(new Date().getTime() + '')
+})
 
 app.post('/account/login', (req, res) => {
     let {
@@ -238,7 +247,7 @@ function oppositeColor(color) {
 }
 
 sockets.on('connection', (socket) => {
-    if (log) console.log(`> Client connected ${socket.id}`)
+    console.log(`> Client connected ${socket.id}`)
 
     socket.on('join-room', ({
         roomId,
@@ -247,7 +256,7 @@ sockets.on('connection', (socket) => {
     }) => {
         if (games[roomId]) {
             socket.emit('join-room', 'success')
-            if (log) console.log(`> Client joined room ${roomId}`)
+            console.log(`> Client joined room ${roomId}`)
             games[roomId].join(socket, token, color)
 
             socket.on('disconnect', () => {
@@ -282,7 +291,7 @@ sockets.on('connection', (socket) => {
         }
         const roomId = newId
         games[roomId] = Game(roomId, +time, !!rated)
-        if (log) console.log(`> Room created ${roomId}`)
+        console.log(`> Room created ${roomId}`)
         socket.emit('create-room', roomId)
     })
 })
@@ -483,29 +492,44 @@ function Game(id, time, rated = false) {
                     black: players.black.info
                 }
             })
+            let running = null
+            if (players.white.timer.isRunning) {
+                running = 'white'
+            } else if (players.black.timer.isRunning) {
+                running = 'black'
+            }
+            console.log('white', players.white.timer.getTime())
+            console.log('black', players.black.timer.getTime())
+            sockets.to(id + '-spectator').emit('update-timers', {
+                white: players.white.timer.getTime(),
+                black: players.black.timer.getTime(),
+                running: running
+            })
         } else {
             if (players.black.socket !== null && players.white.socket !== null) {
                 start()
             }
         }
-        if (log) console.log(`> Player joined in room ${id}`)
+        console.log(`> Player joined in room ${id}`)
     }
 
     function leave(socket) {
         if (players.white.socket === socket) {
-            if (state === 1) state = 2
-            console.log(`> Room ${id}: White player disconnected`)
-            players.white.socket = null
-            players.white.token = null
-            sockets.to(id).emit('player-disconnected', 'white')
+            if (state === 1) {
+                state = 2
+                players.white.socket = null
+                players.white.token = null
+                sockets.to(id).emit('player-disconnected', 'white')
+            }
         } else if (players.black.socket === socket) {
-            if (state === 1) state = 2
-            console.log(`> Room ${id}: Black player disconnected`)
-            players.black.socket = null
-            players.black.token = null
-            sockets.to(id).emit('player-disconnected', 'black')
+            if (state === 1) {
+                state = 2
+                players.black.socket = null
+                players.black.token = null
+                sockets.to(id).emit('player-disconnected', 'black')
+            }
         }
-        if (log) console.log(`> Player left room ${id}`)
+        console.log(`> Player left room ${id}`)
         endGame()
     }
 
@@ -602,7 +626,7 @@ function Game(id, time, rated = false) {
     }
 
     function stop() {
-        if (log) console.log(`> Room ${id} closed`)
+        console.log(`> Room ${id} closed`)
         if (players.white.socket) players.white.socket.emit('reset')
         if (players.black.socket) players.black.socket.emit('reset')
         delete games[id]
