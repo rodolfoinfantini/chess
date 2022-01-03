@@ -1,7 +1,9 @@
 const urlParams = new URLSearchParams(window.location.search)
 
 export function createBoard(appendTo = false, stopCallback, socket) {
-    const board = document.createElement('board')
+    const boardElement = document.createElement('board')
+    const board = document.createElement('div')
+    board.classList.add('board-content')
     const coordsRows = document.createElement('coords')
     const coordsColumns = document.createElement('coords')
     coordsRows.classList.add('rows')
@@ -27,7 +29,7 @@ export function createBoard(appendTo = false, stopCallback, socket) {
     flipBtn.textContent = 'Flip board'
     flipBtn.classList.add('flip-btn')
     flipBtn.onclick = () => {
-        board.classList.toggle('flipped')
+        boardElement.classList.toggle('flipped')
     }
 
     //auto flip checkmark
@@ -78,10 +80,13 @@ export function createBoard(appendTo = false, stopCallback, socket) {
     // options.appendChild(playingAs)
     // options.appendChild(colorToMove)
 
-    board.appendChild(options)
+
+    boardElement.appendChild(board)
+    boardElement.appendChild(options)
+
 
     if (appendTo) {
-        appendTo.appendChild(board)
+        appendTo.appendChild(boardElement)
     }
-    return board
+    return boardElement
 }

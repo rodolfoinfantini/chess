@@ -57,7 +57,7 @@ export function PuzzleGame(puzzle, board, solvedCallback) {
     return Game(gamemode.puzzle, playerColor, board, undefined, undefined, puzzle, solvedCallback)
 }
 
-export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCallback) {
+export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCallback, players) {
     time = +time
 
     let puzzleMoveIndex = 0
@@ -161,23 +161,60 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         [color.black]: {}
     }
 
-    if (mode === gamemode.multiplayer) {
+    if (mode === gamemode.multiplayer || mode === gamemode.spectator) {
         const timers = {
             white: new Timer(secToMs(time)),
             black: new Timer(secToMs(time))
         }
 
         const elements = {
-            white: document.createElement('div'),
-            black: document.createElement('div')
+            timer: {
+                white: document.createElement('div'),
+                black: document.createElement('div')
+            },
+            info: {
+                white: {
+                    parent: document.createElement('div'),
+                    username: document.createElement('span'),
+                    elo: document.createElement('span')
+                },
+                black: {
+                    parent: document.createElement('div'),
+                    username: document.createElement('span'),
+                    elo: document.createElement('span')
+                }
+            }
         }
-        elements.white.classList.add('timer')
-        elements.white.classList.add('timer-white')
-        elements.black.classList.add('timer')
-        elements.black.classList.add('timer-black')
+        elements.timer.white.classList.add('timer', 'timer-white')
+        elements.timer.black.classList.add('timer', 'timer-black')
 
-        board.appendChild(elements.white)
-        board.appendChild(elements.black)
+        elements.info.white.parent.classList.add('player-info', 'info-white')
+        elements.info.black.parent.classList.add('player-info', 'info-black')
+        elements.info.white.username.classList.add('username')
+        elements.info.white.elo.classList.add('elo')
+        elements.info.black.username.classList.add('username')
+        elements.info.black.elo.classList.add('elo')
+
+        const whiteUsername = players.white.username || 'Anonymous'
+        const blackUsername = players.black.username || 'Anonymous'
+        const whiteElo = players.white.elo || '800?'
+        const blackElo = players.black.elo || '800?'
+
+        elements.info.white.username.textContent = whiteUsername
+        elements.info.white.elo.textContent = whiteElo
+        elements.info.black.username.textContent = blackUsername
+        elements.info.black.elo.textContent = blackElo
+
+        board.appendChild(elements.timer.white)
+        board.appendChild(elements.timer.black)
+
+        elements.info.white.parent.appendChild(elements.info.white.username)
+        elements.info.white.parent.appendChild(elements.info.white.elo)
+        elements.info.black.parent.appendChild(elements.info.black.username)
+        elements.info.black.parent.appendChild(elements.info.black.elo)
+
+        board.appendChild(elements.info.white.parent)
+        board.appendChild(elements.info.black.parent)
 
         setInterval(() => {
             if (state !== states.playing) {
@@ -192,28 +229,31 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                 black: timeString(secs.black)
             }
 
-            elements.white.textContent = strings.white
-            elements.black.textContent = strings.black
+            elements.timer.white.textContent = strings.white
+            elements.timer.black.textContent = strings.black
         }, 100)
 
         socket.on('update-timers', data => {
             if (data.running === 'white') {
                 timers.black.stop()
                 timers.white.start()
-                elements.white.classList.add('running')
-                elements.black.classList.remove('running')
+                elements.timer.white.classList.add('running')
+                elements.timer.black.classList.remove('running')
 
-                if (player.color === 'white') document.title = 'Your turn - Chess'
-                else document.title = 'Waiting for opponent - Chess'
+                if (mode === gamemode.multiplayer) {
+                    if (player.color === 'black') document.title = 'Your turn - Chess'
+                    else document.title = 'Waiting for opponent - Chess'
+                }
             } else if (data.running === 'black') {
                 timers.white.stop()
                 timers.black.start()
-                elements.black.classList.add('running')
-                elements.white.classList.remove('running')
+                elements.timer.black.classList.add('running')
+                elements.timer.white.classList.remove('running')
 
-                if (player.color === 'black') document.title = 'Your turn - Chess'
-                else document.title = 'Waiting for opponent - Chess'
-
+                if (mode === gamemode.multiplayer) {
+                    if (player.color === 'black') document.title = 'Your turn - Chess'
+                    else document.title = 'Waiting for opponent - Chess'
+                }
             } else {
                 timers.white.stop()
                 timers.black.stop()
@@ -246,7 +286,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         pieces.length = 0
         if (!puzzle) {
             startPosition.forEach(piece => {
-                const newPiece = new Piece(piece.type, piece.color, piece.x, piece.y, board, false, obj)
+                const newPiece = new Piece(piece.type, piece.color, piece.x, piece.y, board.querySelector('.board-content'), false, obj)
                 newPiece.render()
                 pieces.push(newPiece)
             })
@@ -269,7 +309,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                 for (let j = 0; j < fenPieces[i].length; j++) {
                     const piece = fenPieces[i][j]
                     if (isNaN(piece)) {
-                        const newPiece = new Piece(letterToType[piece.toLowerCase()], isLowerCase(piece) ? color.black : color.white, nextX, i, board, false, obj)
+                        const newPiece = new Piece(letterToType[piece.toLowerCase()], isLowerCase(piece) ? color.black : color.white, nextX, i, board.querySelector('.board-content'), false, obj)
                         newPiece.render()
                         pieces.push(newPiece)
                         nextX++
@@ -422,17 +462,17 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         draggingPiece.moveElement(pos.x, pos.y)
         draggingPiece.createLegalMoves()
 
-        ghostPiece = new Piece(draggingPiece.type, draggingPiece.color, draggingPiece.x, draggingPiece.y, board, true, obj)
+        ghostPiece = new Piece(draggingPiece.type, draggingPiece.color, draggingPiece.x, draggingPiece.y, board.querySelector('.board-content'), true, obj)
         ghostPiece.render()
 
-        const newTile = new Tile(draggingPiece.x, draggingPiece.y, board, tile.selected)
+        const newTile = new Tile(draggingPiece.x, draggingPiece.y, board.querySelector('.board-content'), tile.selected)
         tiles.selected.push(newTile)
 
         for (const key in draggingPiece.legalMoves) {
             const posArray = key.replace('x', '').split('y')
             const x = posArray[0]
             const y = posArray[1]
-            tiles.move.push(new Tile(x, y, board, draggingPiece.legalMoves[key] ? tile.capture : tile.move))
+            tiles.move.push(new Tile(x, y, board.querySelector('.board-content'), draggingPiece.legalMoves[key] ? tile.capture : tile.move))
         }
     }
     board.onmouseleave = () => {

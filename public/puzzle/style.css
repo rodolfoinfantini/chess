@@ -11,9 +11,10 @@ board .auto-flip {
 
 div.filters {
     margin-bottom: 50px;
-    background-color: #ccc;
+    background-color: var(--panel-bg);
+    color: var(--metal-clr);
     padding: 15px;
-    border-radius: 5px;
+    border-radius: 3px;
     width: 90%;
     max-width: 600px;
     display: flex;
@@ -25,12 +26,24 @@ div.filters input,
 div.filters button,
 div.filters .toggle {
     padding: 3px 6px;
-    border-radius: 5px;
+    border-radius: 3px;
+    background: var(--metal-bg);
+    color: var(--metal-clr);
+    transition: all 150ms;
+}
+
+div.filters button,
+div.filters .toggle {
+    cursor: pointer;
+}
+
+div.filters button:hover,
+div.filters .toggle:hover {
+    background: var(--metal-bg-hover);
+    color: var(--metal-clr-hover);
 }
 
 div.filters .toggle {
-    background-color: #e9e9ed;
-    cursor: pointer;
     font-size: 0.9rem;
 }
 
@@ -66,8 +79,12 @@ div.filters .selected::before {
 }
 
 a.reset {
-    color: hsl(236, 78%, 33%);
+    color: hsl(236, 48%, 53%);
     text-decoration: none;
     font-weight: bold;
     font-size: 1.5rem;
+}
+
+board {
+    margin-bottom: 100px;
 }

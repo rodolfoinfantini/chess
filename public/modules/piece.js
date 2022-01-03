@@ -50,7 +50,7 @@ export default class Piece {
         return this.element
     }
     moveElement(xPx, yPx) {
-        if (this.boardElement.classList.contains('flipped')) {
+        if (this.boardElement.parentElement.classList.contains('flipped')) {
             xPx = this.boardElement.offsetWidth - xPx
             yPx = this.boardElement.offsetHeight - yPx
         }

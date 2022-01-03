@@ -35,7 +35,10 @@ app.use(express.static('public'))
 app.use(express.json())
 
 async function getEloFromToken(token) {
-    if (token == null) return null
+    if (token == null) return {
+        elo: null,
+        username: null
+    }
     const user = await mysqlQuery(`select * from users where token = '${token}'`)
     if (user.length === 0) {
         throw new Error('User not found')
@@ -318,12 +321,14 @@ function Game(id, time, rated = false) {
         white: {
             socket: null,
             timer: new Timer(secToMs(gameTime)),
-            token: null
+            token: null,
+            info: null
         },
         black: {
             socket: null,
             timer: new Timer(secToMs(gameTime)),
-            token: null
+            token: null,
+            info: null
         }
     }
 
@@ -423,7 +428,11 @@ function Game(id, time, rated = false) {
     }
 
     function join(socket, token, color) {
-        if (players.white.token === token || players.black.token === token) {
+        if (state === 3) {
+            socket.emit('join-room', 'error:Game already finished')
+            return
+        }
+        if (token && (players.white.token === token || players.black.token === token)) {
             socket.emit('join-room', 'error:You are already in this room')
             return
         }
@@ -468,7 +477,11 @@ function Game(id, time, rated = false) {
             socket.join(id + '-spectator')
             socket.emit('spectator', {
                 fen: fen,
-                gameTime: gameTime
+                gameTime: gameTime,
+                players: {
+                    white: players.white.info,
+                    black: players.black.info
+                }
             })
         } else {
             if (players.black.socket !== null && players.white.socket !== null) {
@@ -480,11 +493,13 @@ function Game(id, time, rated = false) {
 
     function leave(socket) {
         if (players.white.socket === socket) {
+            if (state === 1) state = 2
             console.log(`> Room ${id}: White player disconnected`)
             players.white.socket = null
             players.white.token = null
             sockets.to(id).emit('player-disconnected', 'white')
         } else if (players.black.socket === socket) {
+            if (state === 1) state = 2
             console.log(`> Room ${id}: Black player disconnected`)
             players.black.socket = null
             players.black.token = null
@@ -497,11 +512,14 @@ function Game(id, time, rated = false) {
     async function start() {
         state = 1
 
+        players.white.info = await getEloFromToken(players.white.token)
+        players.black.info = await getEloFromToken(players.black.token)
+
         sockets.to(id).emit('start', {
             gameTime,
             players: {
-                white: await getEloFromToken(players.white.token),
-                black: await getEloFromToken(players.black.token)
+                white: players.white.info,
+                black: players.black.info
             }
         })
 

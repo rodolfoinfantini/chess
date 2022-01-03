@@ -372,7 +372,8 @@ socket.on('resign', (color) => {
 
 socket.on('spectator', ({
     fen,
-    gameTime
+    gameTime,
+    players
 }) => {
     waitingDiv.remove()
     placeholderGame.stop()
@@ -381,7 +382,7 @@ socket.on('spectator', ({
     if (game) game.stop()
     game = Game(gamemode.spectator, playerColor, board, socket, +gameTime, {
         fen
-    })
+    }, undefined, players)
     document.body.appendChild(board)
     game.start()
 })
@@ -395,7 +396,7 @@ socket.on('start', ({
     placeholderBoard.remove()
     removeAllTiles()
     if (game) game.stop()
-    game = Game(gamemode.multiplayer, playerColor, board, socket, +gameTime)
+    game = Game(gamemode.multiplayer, playerColor, board, socket, +gameTime, undefined, undefined, players)
     document.body.appendChild(board)
     game.start()
 })
