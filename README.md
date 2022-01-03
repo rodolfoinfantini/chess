@@ -3,7 +3,7 @@
 [Click here to Play it!](https://vorak-chess.herokuapp.com/)
 
 ### Demo
-<video src="/screenshots/demo.mp4"></video>
+<video src="https://sirvorak.github.io/chess/screenshots/demo.mp4"></video>
 ### All rules implemented:
  * Pieces movement
  * Check and checkmate
