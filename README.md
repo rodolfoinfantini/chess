@@ -10,6 +10,7 @@ NPM Packages:
  * MySQL2
  * Socket.io
  * Stockfish
+<br>
 [Click here to Play it!](https://vorak-chess.herokuapp.com/)
 
 ### Demo
