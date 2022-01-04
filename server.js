@@ -94,7 +94,8 @@ async function insertToUsers(values) {
 let log = false
 
 app.get('/ping', (req, res) => {
-    res.send(new Date().getTime() + '')
+    // res.send(new Date().getTime() + '')
+    res.send('pong')
 })
 
 app.post('/account/login', (req, res) => {
