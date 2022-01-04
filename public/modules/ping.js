@@ -1,7 +1,12 @@
 'use strict'
 
+import {
+    sleep
+} from './sleep.js'
+
 function pingInit() {
-    function config(element, delay, options) {
+    async function config(element, delay, options) {
+        await sleep(1000)
         const worker = new Worker(location.protocol + '//' + location.host + '/modules/workers/ping-worker.js')
         worker.onmessage = (e) => {
             if (element) {
