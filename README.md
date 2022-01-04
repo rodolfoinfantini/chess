@@ -1,6 +1,7 @@
 # Chess!
 ## Vanilla JS Chess with Stockfish and MULTIPLAYER!
 Made with vanilla JavaScript, using socket.io, Node JS for the backend and MySQL for the users Database *(ALL PASSWORDS ENCRYPTED)*.
+<br>
 NPM Packages:
  * Express
  * Dot Env
