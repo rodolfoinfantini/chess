@@ -1,61 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Chess</title>
+		<link rel="stylesheet" href="style.css" />
+		<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+		<script src="script.js" defer type="module"></script>
+		<script src="/socket.io/socket.io.js" type="text/javascript"></script>
+	</head>
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-    <script src="script.js" defer type="module"></script>
-    <script src="/socket.io/socket.io.js" type="text/javascript"></script>
-</head>
-
-<body>
-    <header>
-        <div class="ping-wrapper">
-            <span class="ping-text">Ping</span>
-            <span class="ping-value">100 ms</span>
-        </div>
-        <a href="/">PLAY</a>
-        <a href="/puzzle">PUZZLES</a>
-        <a href="/login" class="sign-in">SIGN IN</a>
-        <button class="sign-out hidden"></button>
-    </header>
-    <div class="play">
-        <div class="content">
-            <h2>Play Online</h2>
-            <button class="create-room">Create Game</button>
-            <button class="join-room">Join Game</button>
-            <button class="puzzle"><a href="/puzzle">Puzzle</a></button>
-            <h2>Play Offline</h2>
-            <div class="gamemode">
-                <button data-mode="playerVsPlayer" class="toggle selected">Over the board</button>
-                <button data-mode="playerVsComputer" class="toggle">Play with the computer</button>
-                <button data-mode="computerVsComputer" class="toggle">Computer vs. Computer</button>
-            </div>
-            <button class="play-btn">Play</button>
-        </div>
-    </div>
-    <template id="join-template">
-        <div class="join-game">
-            <div class="inner">
-                <h2>Join Game</h2>
-                <div class="game-list">
-                    <table>
-                        <tr>
-                            <th>Player</th>
-                            <th>Elo</th>
-                            <th>Time</th>
-                            <th></th>
-                        </tr>
-                    </table>
-                </div>
-                <button class="cancel-btn">X</button>
-            </div>
-        </div>
-    </template>
-</body>
-
+	<body>
+		<header>
+			<div class="ping-wrapper">
+				<div class="latency">
+					<span class="ping-text">Ping</span>
+					<span class="ping-value">100 ms</span>
+				</div>
+				<div class="server">
+					<span class="server-text">Server</span>
+					<span class="server-value">2 ms</span>
+				</div>
+			</div>
+			<a href="/">PLAY</a>
+			<a href="/puzzle">PUZZLES</a>
+			<a href="/login" class="sign-in">SIGN IN</a>
+			<button class="sign-out hidden"></button>
+		</header>
+		<div class="play">
+			<div class="content">
+				<h2>Play Online</h2>
+				<button class="create-room">Create Game</button>
+				<button class="join-room">Join Game</button>
+				<button class="puzzle"><a href="/puzzle">Puzzle</a></button>
+				<h2>Play Offline</h2>
+				<div class="gamemode">
+					<button data-mode="playerVsPlayer" class="toggle selected">
+						Over the board
+					</button>
+					<button data-mode="playerVsComputer" class="toggle">
+						Play with the computer
+					</button>
+					<button data-mode="computerVsComputer" class="toggle">
+						Computer vs. Computer
+					</button>
+				</div>
+				<button class="play-btn">Play</button>
+			</div>
+		</div>
+		<template id="join-template">
+			<div class="join-game">
+				<div class="inner">
+					<h2>Join Game</h2>
+					<div class="game-list">
+						<table>
+							<tr>
+								<th>Player</th>
+								<th>Elo</th>
+								<th>Time</th>
+								<th></th>
+							</tr>
+						</table>
+					</div>
+					<button class="cancel-btn">X</button>
+				</div>
+			</div>
+		</template>
+	</body>
 </html>
