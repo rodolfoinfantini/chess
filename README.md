@@ -1,5 +1,7 @@
 # Chess!
 ## Vanilla JS Chess with Stockfish and MULTIPLAYER!
+[Click here to Play it!](https://vorak-chess.herokuapp.com/)
+<br>
 Made with vanilla JavaScript, using socket.io, Node JS for the backend and MySQL for the users Database *(ALL PASSWORDS ENCRYPTED)*.
 <br>
 <br>
@@ -10,8 +12,6 @@ NPM Packages:
  * MySQL2
  * Socket.io
  * Stockfish
-<br>
-[Click here to Play it!](https://vorak-chess.herokuapp.com/)
 
 ### Demo
 [![Watch the video](screenshots/video.png)](https://youtu.be/3foDjZ4LCQM)
