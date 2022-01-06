@@ -1,43 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Register - Chess</title>
+        <link rel="stylesheet" href="../login/style.css" />
+        <script src="script.js" defer></script>
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Chess</title>
-    <link rel="stylesheet" href="../login/style.css">
-    <script src="script.js" defer></script>
-</head>
-
-<body>
-    <div class="form">
-        <div class="error"></div>
-        <a href="../">← back</a>
-        <h1>Register</h1>
-        <form>
-            <label>
-                User name
-                <input type="text" class="username" required>
-            </label>
-            <label>
-                Email
-                <input type="email" class="email" required>
-            </label>
-            <label>
-                Password
-                <input type="password" class="password" required>
-            </label>
-            <label>
-                Confirm password
-                <input type="password" class="confirm-password" required>
-            </label>
-            <button class="submit">REGISTER</button>
-        </form>
-        <div class="alternative">
-            <a href="../login">Sign in</a>
+    <body>
+        <div class="form">
+            <div class="error"></div>
+            <a href="../">← back</a>
+            <h1>Register</h1>
+            <form>
+                <label>
+                    User name
+                    <input type="text" class="username" required />
+                </label>
+                <label>
+                    Email
+                    <input type="email" class="email" required />
+                </label>
+                <label>
+                    Password
+                    <input type="password" class="password" required />
+                </label>
+                <label>
+                    Confirm password
+                    <input type="password" class="confirm-password" required />
+                </label>
+                <button class="submit">REGISTER</button>
+            </form>
+            <div class="alternative">
+                <a href="../login">Sign in</a>
+            </div>
         </div>
-    </div>
-</body>
-
+        <template id="verification">
+            <div class="form verify">
+                <div class="error"></div>
+                <h1>Verification</h1>
+                <p>Type the verification code sent to your email address</p>
+                <form>
+                    <label>
+                        Verification code
+                        <input type="text" class="verification-code" required />
+                    </label>
+                    <p class="resend"></p>
+                    <button class="submit">VERIFY</button>
+                </form>
+            </div>
+        </template>
+    </body>
 </html>

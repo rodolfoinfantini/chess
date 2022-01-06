@@ -8,6 +8,8 @@ import { createBoard } from './modules/board.js'
 
 import { ping, getColorForPing } from './modules/ping.js'
 
+import { serverDelay } from './modules/serverDelay.js'
+
 const socket = io('/')
 
 const pingConfig = {
@@ -35,14 +37,19 @@ const pingConfig = {
 
 ping.config(
 	document.querySelector('.ping-wrapper .ping-value'),
-	5000,
+	2000,
+	pingConfig
+)
+serverDelay.config(
+	socket,
+	document.querySelector('.ping-wrapper .server-value'),
 	pingConfig
 )
 
-const serverDelay = document.querySelector('.ping-wrapper .server-value')
-socket.on('server-delay', (delay) => {
-	serverDelay.textContent = delay + ' ms'
-	serverDelay.style.color = getColorForPing(delay, pingConfig) ?? ''
+socket.on('sign-out', () => {
+	localStorage.removeItem('token')
+	localStorage.removeItem('username')
+	location.href = '/login'
 })
 
 if (localStorage.getItem('token') && localStorage.getItem('username')) {

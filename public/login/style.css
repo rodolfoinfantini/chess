@@ -88,19 +88,22 @@ div.alternative {
 }
 
 div.alternative a,
-div.form>a {
+div.form > a,
+p.resend {
     text-decoration: none;
     font-size: 0.9rem;
     color: #3692e7;
     transition: color 150ms;
+    cursor: pointer;
 }
 
-div.form>a {
+div.form > a {
     font-size: 1.1rem;
 }
 
 div.alternative a:hover,
-div.form>a {
+div.form > a:hover,
+p.resend:hover {
     color: #56a3eb;
 }
 

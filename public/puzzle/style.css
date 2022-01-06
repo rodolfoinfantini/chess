@@ -1,86 +1,90 @@
 body {
-    flex-direction: row-reverse;
-    flex-wrap: wrap;
-    justify-content: center;
+	flex-direction: row-reverse;
+	flex-wrap: wrap;
+	justify-content: center;
 }
 
 board .stop-btn,
 board .auto-flip {
-    display: none;
+	display: none;
 }
 
 div.filters {
-    margin-bottom: 50px;
-    background-color: var(--panel-bg);
-    color: var(--metal-clr);
-    padding: 15px;
-    border-radius: 3px;
-    width: 90%;
-    max-width: 600px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+	margin-bottom: 50px;
+	background-color: var(--panel-bg);
+	color: var(--metal-clr);
+	padding: 15px;
+	border-radius: 3px;
+	width: 90%;
+	max-width: 600px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
 }
 
 div.filters input,
 div.filters button,
 div.filters .toggle {
-    padding: 3px 6px;
-    border-radius: 3px;
-    background: var(--metal-bg);
-    color: var(--metal-clr);
-    transition: all 150ms;
+	padding: 3px 6px;
+	border-radius: 3px;
+	background: var(--metal-bg);
+	color: var(--metal-clr);
+	transition: all 150ms;
 }
 
 div.filters button,
 div.filters .toggle {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 div.filters button:hover,
 div.filters .toggle:hover {
-    background: var(--metal-bg-hover);
-    color: var(--metal-clr-hover);
+	background: var(--metal-bg-hover);
+	color: var(--metal-clr-hover);
 }
 
 div.filters .toggle {
-    font-size: 0.9rem;
+	font-size: 0.9rem;
 }
 
 div.filters .btns {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
+	display: flex;
+	gap: 5px;
+	flex-wrap: wrap;
 }
 
 div.filters label {
-    display: flex;
-    flex-direction: column;
+	display: flex;
+	flex-direction: column;
 }
 
 div.filters form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
 }
 
 div.filters .selected {
-    background-color: #aaa;
+	background-color: #aaa;
 }
 
 div.filters .selected::before {
-    content: '✓';
-    padding-right: 5px;
+	content: '✓';
+	padding-right: 5px;
 }
 
 .puzzle-rating span:first-child,
 .puzzle-themes span:first-child {
-    font-weight: bold;
+	font-weight: bold;
 }
 
 a.reset {
-    color: hsl(236, 48%, 53%);
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1.5rem;
+	color: hsl(236, 48%, 53%);
+	text-decoration: none;
+	font-weight: bold;
+	font-size: 1.5rem;
+}
+
+board {
+	margin-top: 0;
 }
