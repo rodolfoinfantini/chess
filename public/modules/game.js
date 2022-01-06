@@ -1,13 +1,8 @@
-import Piece, {
-    oppositeColor,
-    posString
-} from './piece.js'
+import Piece, { oppositeColor, posString } from './piece.js'
 
 import Tile from './tile.js'
 
-import {
-    startPosition
-} from './startPosition.js'
+import { startPosition } from './startPosition.js'
 
 import {
     tile,
@@ -20,27 +15,21 @@ import {
     type,
     state as states,
     info,
-    letterToType
+    letterToType,
 } from './constants.js'
 
-import {
-    play
-} from './sound.js'
+import { play } from './sound.js'
 
-import Timer, {
-    secToMs,
-    msToSec,
-    timeString
-} from './timer.js'
+import Timer, { secToMs, msToSec, timeString } from './timer.js'
 
 class Move {
     from = {
         x: null,
-        y: null
+        y: null,
     }
     to = {
         x: null,
-        y: null
+        y: null,
     }
     promotion
     constructor(fromX, fromY, toX, toY, promotion = null) {
@@ -70,7 +59,6 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         const fullMove = puzzle.moves[puzzleMoveIndex]
         return fullMove.charAt(0) + fullMove.charAt(1) + fullMove.charAt(2) + fullMove.charAt(3)
     }
-
 
     const toMoveDiv = board.querySelector('.color-to-move')
     const autoFlipCheckBox = board.querySelector('.board-options .auto-flip input')
@@ -103,7 +91,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         movesHistory: 'position startpos moves',
         fenHistory: [],
         fullMoves: 1,
-        halfMoves: 0
+        halfMoves: 0,
     }
 
     const pieces = []
@@ -112,13 +100,13 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         selected: [],
         lastMove: [],
         move: [],
-        check: []
+        check: [],
     }
     const castling = {
         Q: true, //white
         K: true, //white
         q: true, //black
-        k: true //black
+        k: true, //black
     }
 
     function getCastling() {
@@ -126,9 +114,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
     const enPassant = {
         x: null,
-        y: null
+        y: null,
     }
-
 
     let mode = gMode
 
@@ -140,14 +127,16 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         mode = newMode
     }
     const player = {
-        color: playerColor
+        color: playerColor,
     }
     let state = states.start
     let moveTime = 200
+    let skillLevel = 10
 
     function setMoveTime(newMoveTime) {
         moveTime = newMoveTime
     }
+    // const stockfish = new Worker(`${location.pathname === '/' ? '' : '.'}./lc0/lc0.js`)
     const stockfish = new Worker(`${location.pathname === '/' ? '' : '.'}./stockfish/stockfish.js`)
 
     let isClicking = false
@@ -158,32 +147,32 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     const attacked = {
         [color.white]: {},
-        [color.black]: {}
+        [color.black]: {},
     }
 
     if (mode === gamemode.multiplayer || mode === gamemode.spectator) {
         const timers = {
             white: new Timer(secToMs(time)),
-            black: new Timer(secToMs(time))
+            black: new Timer(secToMs(time)),
         }
 
         const elements = {
             timer: {
                 white: document.createElement('div'),
-                black: document.createElement('div')
+                black: document.createElement('div'),
             },
             info: {
                 white: {
                     parent: document.createElement('div'),
                     username: document.createElement('span'),
-                    elo: document.createElement('span')
+                    elo: document.createElement('span'),
                 },
                 black: {
                     parent: document.createElement('div'),
                     username: document.createElement('span'),
-                    elo: document.createElement('span')
-                }
-            }
+                    elo: document.createElement('span'),
+                },
+            },
         }
         elements.timer.white.classList.add('timer', 'timer-white')
         elements.timer.black.classList.add('timer', 'timer-black')
@@ -222,23 +211,24 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             }
             const secs = {
                 white: Math.max(0, msToSec(timers.white.getTime())),
-                black: Math.max(0, msToSec(timers.black.getTime()))
+                black: Math.max(0, msToSec(timers.black.getTime())),
             }
             const strings = {
                 white: timeString(secs.white),
-                black: timeString(secs.black)
+                black: timeString(secs.black),
             }
 
             elements.timer.white.textContent = strings.white
             elements.timer.black.textContent = strings.black
         }, 100)
 
-        socket.on('update-elo', data => {
+        socket.on('update-elo', (data) => {
             data = +data
-            elements.info[player.color].elo.textContent = (+elements.info[player.color].elo.textContent + data) + ''
+            elements.info[player.color].elo.textContent =
+                +elements.info[player.color].elo.textContent + data + ''
         })
 
-        socket.on('update-timers', data => {
+        socket.on('update-timers', (data) => {
             if (data.running === 'white') {
                 timers.black.stop()
                 timers.white.start()
@@ -293,14 +283,23 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         draggingPiece = null
         ghostPiece = null
 
-        stockfish.postMessage("ucinewgame")
+        stockfish.postMessage('ucinewgame')
+        setSkillLevel(skillLevel, moveTime)
         if (pieces.length > 0) {
-            pieces.forEach(piece => piece.element.remove())
+            pieces.forEach((piece) => piece.element.remove())
         }
         pieces.length = 0
         if (!puzzle) {
-            startPosition.forEach(piece => {
-                const newPiece = new Piece(piece.type, piece.color, piece.x, piece.y, board.querySelector('.board-content'), false, obj)
+            startPosition.forEach((piece) => {
+                const newPiece = new Piece(
+                    piece.type,
+                    piece.color,
+                    piece.x,
+                    piece.y,
+                    board.querySelector('.board-content'),
+                    false,
+                    obj
+                )
                 newPiece.render()
                 pieces.push(newPiece)
             })
@@ -323,7 +322,15 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                 for (let j = 0; j < fenPieces[i].length; j++) {
                     const piece = fenPieces[i][j]
                     if (isNaN(piece)) {
-                        const newPiece = new Piece(letterToType[piece.toLowerCase()], isLowerCase(piece) ? color.black : color.white, nextX, i, board.querySelector('.board-content'), false, obj)
+                        const newPiece = new Piece(
+                            letterToType[piece.toLowerCase()],
+                            isLowerCase(piece) ? color.black : color.white,
+                            nextX,
+                            i,
+                            board.querySelector('.board-content'),
+                            false,
+                            obj
+                        )
                         newPiece.render()
                         pieces.push(newPiece)
                         nextX++
@@ -391,8 +398,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     function stop() {
         stockfish.onmessage = null
-        pieces.forEach(piece => piece.element.remove())
-        board.querySelectorAll('.tile').forEach(tile => tile.remove())
+        pieces.forEach((piece) => piece.element.remove())
+        board.querySelectorAll('.tile').forEach((tile) => tile.remove())
         state = states.end
         board.onmousedown = null
         board.onmouseleave = null
@@ -407,7 +414,9 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         clearTiles('lastMove')
 
         try {
-            board.querySelector('.playing-as').textContent = `Playing as ${player.color === color.white ? 'White' : 'Black'}`
+            board.querySelector('.playing-as').textContent = `Playing as ${
+                player.color === color.white ? 'White' : 'Black'
+            }`
             board.querySelector('.playing-as').classList.add(player.color)
         } catch (e) {}
 
@@ -423,8 +432,10 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                 nextPuzzleMove()
             }, 700)
         }
-        if (mode === gamemode.computerVsComputer) moveStockfish()
-        if (mode === gamemode.playerVsComputer && player.color === color.black) moveStockfish()
+        setTimeout(() => {
+            if (mode === gamemode.computerVsComputer) moveStockfish()
+            if (mode === gamemode.playerVsComputer && player.color === color.black) moveStockfish()
+        }, 500)
     }
 
     function restart() {
@@ -436,11 +447,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         return board.getBoundingClientRect()
     }
 
-    board.onmousedown = ({
-        target,
-        clientX,
-        clientY
-    }) => {
+    board.onmousedown = ({ target, clientX, clientY }) => {
         if (mode === gamemode.spectator) return
 
         clearTiles('selected')
@@ -461,7 +468,11 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             }
         } else if (mode === gamemode.computerVsComputer) {
             return
-        } else if (mode === gamemode.playerVsComputer || mode === gamemode.multiplayer || mode === gamemode.puzzle) {
+        } else if (
+            mode === gamemode.playerVsComputer ||
+            mode === gamemode.multiplayer ||
+            mode === gamemode.puzzle
+        ) {
             if (clickedPiece.color !== player.color || clickedPiece.color !== turn) {
                 return
             }
@@ -470,23 +481,43 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         const boardRect = getClientRect()
         const pos = {
             x: clientX - boardRect.left,
-            y: clientY - boardRect.top
+            y: clientY - boardRect.top,
         }
         draggingPiece = clickedPiece
         draggingPiece.moveElement(pos.x, pos.y)
         draggingPiece.createLegalMoves()
 
-        ghostPiece = new Piece(draggingPiece.type, draggingPiece.color, draggingPiece.x, draggingPiece.y, board.querySelector('.board-content'), true, obj)
+        ghostPiece = new Piece(
+            draggingPiece.type,
+            draggingPiece.color,
+            draggingPiece.x,
+            draggingPiece.y,
+            board.querySelector('.board-content'),
+            true,
+            obj
+        )
         ghostPiece.render()
 
-        const newTile = new Tile(draggingPiece.x, draggingPiece.y, board.querySelector('.board-content'), tile.selected)
+        const newTile = new Tile(
+            draggingPiece.x,
+            draggingPiece.y,
+            board.querySelector('.board-content'),
+            tile.selected
+        )
         tiles.selected.push(newTile)
 
         for (const key in draggingPiece.legalMoves) {
             const posArray = key.replace('x', '').split('y')
             const x = posArray[0]
             const y = posArray[1]
-            tiles.move.push(new Tile(x, y, board.querySelector('.board-content'), draggingPiece.legalMoves[key] ? tile.capture : tile.move))
+            tiles.move.push(
+                new Tile(
+                    x,
+                    y,
+                    board.querySelector('.board-content'),
+                    draggingPiece.legalMoves[key] ? tile.capture : tile.move
+                )
+            )
         }
     }
     board.onmouseleave = () => {
@@ -500,10 +531,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     //!MOVE
-    board.onmouseup = ({
-        clientX,
-        clientY
-    }) => {
+    board.onmouseup = ({ clientX, clientY }) => {
         if (mode === gamemode.spectator) return
         if (state !== states.playing) return
         if (!isClicking) return
@@ -512,12 +540,16 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     function movePiece(from, to) {
-        const piece = pieces.find(piece => piece.x === from.x && piece.y === from.y)
+        const piece = pieces.find((piece) => piece.x === from.x && piece.y === from.y)
         if (piece) {
             const moveResult = piece.move(to.x, to.y, true)
             if (moveResult) {
                 hasMoved(piece)
-                updatePosition(`${from.x}${from.y}`, `${to.x}${to.y}`, moveResult === 'q' ? 'q' : undefined)
+                updatePosition(
+                    `${from.x}${from.y}`,
+                    `${to.x}${to.y}`,
+                    moveResult === 'q' ? 'q' : undefined
+                )
             }
         }
         analyzeStockfish()
@@ -527,7 +559,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         const move = puzzle.moves[puzzleMoveIndex]
         const moveNumber = moveStringToNumber(move)
         const split = moveNumber.split('')
-        const piece = pieces.find(piece => piece.x == split[0] && piece.y == split[1])
+        const piece = pieces.find((piece) => piece.x == split[0] && piece.y == split[1])
         if (!piece) return
         piece.move(split[2], split[3], true)
         if (hasMoved(piece)) {
@@ -544,7 +576,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         const boardRect = getClientRect()
         const pos = {
             x: clientX - boardRect.left,
-            y: clientY - boardRect.top
+            y: clientY - boardRect.top,
         }
         if (board.classList.contains('flipped')) {
             pos.x = board.offsetWidth - pos.x
@@ -579,7 +611,16 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                     nextPuzzleMove()
                 }
                 if (mode === gamemode.multiplayer && socket) {
-                    socket.emit('move', new Move(+from.split('')[0], +from.split('')[1], x, y, moveResult === 'q' ? 'q' : undefined))
+                    socket.emit(
+                        'move',
+                        new Move(
+                            +from.split('')[0],
+                            +from.split('')[1],
+                            x,
+                            y,
+                            moveResult === 'q' ? 'q' : undefined
+                        )
+                    )
                 }
                 if (hasMoved(draggingPiece)) {
                     updatePosition(from, to, moveResult === 'q' ? 'q' : undefined)
@@ -596,8 +637,6 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         if (mode === gamemode.playerVsComputer) moveStockfish()
         else analyzeStockfish()
     }
-
-
 
     //!HAS MOVED
     function hasMoved(piece) {
@@ -627,9 +666,13 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     function repetitionDraw() {
-        const fenHistory = position.fenHistory.filter((item, index) => position.fenHistory.indexOf(item) === index)
-        const fenHistoryCount = fenHistory.map(item => position.fenHistory.filter(i => i === item).length)
-        const repetition = fenHistoryCount.filter(item => item > 2)
+        const fenHistory = position.fenHistory.filter(
+            (item, index) => position.fenHistory.indexOf(item) === index
+        )
+        const fenHistoryCount = fenHistory.map(
+            (item) => position.fenHistory.filter((i) => i === item).length
+        )
+        const repetition = fenHistoryCount.filter((item) => item > 2)
         return repetition.length > 0
     }
 
@@ -646,22 +689,22 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     function clearTiles(key) {
         try {
-            board.querySelectorAll(`.${key}`).forEach(item => item.remove())
+            board.querySelectorAll(`.${key}`).forEach((item) => item.remove())
         } catch (e) {}
 
         if (!tiles[key]) return
-        tiles[key].forEach(tile => tile.element.remove())
+        tiles[key].forEach((tile) => tile.element.remove())
         tiles[key].length = 0
     }
 
     function findPiece(element) {
-        return pieces.find(piece => {
+        return pieces.find((piece) => {
             return piece.element === element
         })
     }
 
     function resetAllPieces() {
-        pieces.forEach(piece => piece.resetPosition())
+        pieces.forEach((piece) => piece.resetPosition())
     }
 
     board.onmousemove = (e) => {
@@ -669,7 +712,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         const boardRect = getClientRect()
         const pos = {
             x: e.clientX - boardRect.left,
-            y: e.clientY - boardRect.top
+            y: e.clientY - boardRect.top,
         }
         draggingPiece.moveElement(pos.x, pos.y)
     }
@@ -682,7 +725,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         for (let y = 0; y < 8; y++) {
             let empty = 0
             for (let x = 0; x < 8; x++) {
-                const piece = pieces.find(piece => piece.x === x && piece.y === y)
+                const piece = pieces.find((piece) => piece.x === x && piece.y === y)
                 if (piece) {
                     if (empty > 0) {
                         fen += empty
@@ -705,7 +748,12 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         fen += ' ' + colorLetter[turn]
 
         //castling rights
-        if (castling.Q === false && castling.q === false && castling.K === false && castling.k === false) {
+        if (
+            castling.Q === false &&
+            castling.q === false &&
+            castling.K === false &&
+            castling.k === false
+        ) {
             fen += ' -'
         } else {
             fen += ' '
@@ -741,20 +789,36 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     function moveStringToNumber(str) {
         const split = str.split('')
         if (split.length === 4) {
-            return moveNumber['x' + split[0]] + moveNumber['y' + split[1]] + moveNumber['x' + split[2]] + moveNumber['y' + split[3]]
+            return (
+                moveNumber['x' + split[0]] +
+                moveNumber['y' + split[1]] +
+                moveNumber['x' + split[2]] +
+                moveNumber['y' + split[3]]
+            )
         }
         if (split.length === 2) {
             return moveNumber['x' + split[0]] + moveNumber['y' + split[1]]
         }
         if (split.length === 5) {
-            return moveNumber['x' + split[0]] + moveNumber['y' + split[1]] + moveNumber['x' + split[2]] + moveNumber['y' + split[3]] + split[4]
+            return (
+                moveNumber['x' + split[0]] +
+                moveNumber['y' + split[1]] +
+                moveNumber['x' + split[2]] +
+                moveNumber['y' + split[3]] +
+                split[4]
+            )
         }
     }
 
     function moveNumberToString(num) {
         const split = num.split('')
         if (split.length === 4) {
-            return moveString['x' + split[0]] + moveString['y' + split[1]] + moveString['x' + split[2]] + moveString['y' + split[3]]
+            return (
+                moveString['x' + split[0]] +
+                moveString['y' + split[1]] +
+                moveString['x' + split[2]] +
+                moveString['y' + split[3]]
+            )
         }
         if (split.length === 2) {
             return moveString['x' + split[0]] + moveString['y' + split[1]]
@@ -771,9 +835,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         stockfish.postMessage(position.movesHistory)
     }
 
-    stockfish.onmessage = ({
-        data
-    }) => {
+    stockfish.onmessage = ({ data }) => {
         if (state === states.end || state === states.start) return
         const dataArr = data.split(' ')
         if (data.includes('checkmate') || data === 'info depth 0 score mate 0') {
@@ -781,11 +843,14 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             return
         } else if (dataArr.includes('bestmove')) {
             if (!data.includes('(none)')) {
-                if ((mode === gamemode.playerVsComputer && turn !== player.color) || mode === gamemode.computerVsComputer && mode !== gamemode.multiplayer) {
+                if (
+                    (mode === gamemode.playerVsComputer && turn !== player.color) ||
+                    (mode === gamemode.computerVsComputer && mode !== gamemode.multiplayer)
+                ) {
                     const move = dataArr[1]
                     const moveNumber = moveStringToNumber(move)
                     const split = moveNumber.split('')
-                    const piece = pieces.find(piece => piece.x == split[0] && piece.y == split[1])
+                    const piece = pieces.find((piece) => piece.x == split[0] && piece.y == split[1])
                     if (!piece) return
                     piece.move(split[2], split[3], true)
                     if (hasMoved(piece)) {
@@ -864,7 +929,10 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         } else if (infoType === info.resign) {
             h1.textContent = `${winner === color.white ? 'White' : 'Black'} resigned.`
             p.textContent = `${winner === color.white ? 'Black' : 'White'} is victorious.`
-            div.classList.replace(winner === color.white ? 'white' : 'black', winner === color.white ? 'black' : 'white')
+            div.classList.replace(
+                winner === color.white ? 'white' : 'black',
+                winner === color.white ? 'black' : 'white'
+            )
         } else if (infoType === info.timeOut) {
             h1.textContent = `${winner === color.white ? 'White' : 'Black'} wins.`
             p.textContent = `By time out.`
@@ -928,7 +996,6 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             buttons.appendChild(rematchBtn)
         }
 
-
         const closeBtn = document.createElement('button')
         closeBtn.textContent = 'Close'
         closeBtn.onclick = () => {
@@ -966,16 +1033,16 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     function getPiecesOfColor(color) {
-        return pieces.filter(piece => piece.color === color)
+        return pieces.filter((piece) => piece.color === color)
     }
 
     function getPiecesOfType(type) {
-        return pieces.filter(piece => piece.type === type)
+        return pieces.filter((piece) => piece.type === type)
     }
 
     function isCheck(checkingColor) {
         generateAttackTiles(oppositeColor(checkingColor))
-        const king = getPiecesOfType(type.king).find(piece => piece.color === checkingColor)
+        const king = getPiecesOfType(type.king).find((piece) => piece.color === checkingColor)
         const enemyAttack = attacked[oppositeColor(checkingColor)]
         for (const str in enemyAttack) {
             const split = str.replace('x', '').split('y')
@@ -1003,8 +1070,18 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     function clearTiles(key) {
         if (!tiles[key]) return
-        tiles[key].forEach(tile => tile.element.remove())
+        tiles[key].forEach((tile) => tile.element.remove())
         tiles[key].length = 0
+    }
+
+    stockfish.postMessage('uci')
+    stockfish.postMessage('isready')
+    function setSkillLevel(level, time) {
+        skillLevel = level
+        stockfish.postMessage('setoption name Skill Level value ' + skillLevel)
+        stockfish.postMessage('setoption name Skill Level Maximum Error value 600')
+        stockfish.postMessage('setoption name Skill Level Probability value 128')
+        moveTime = time
     }
 
     const obj = {
@@ -1031,9 +1108,9 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         movePiece,
         resign,
         getPuzzleMoveIndex,
-        getCurrentPuzzleMove
+        getCurrentPuzzleMove,
+        setSkillLevel,
     }
-
 
     startPos()
 
