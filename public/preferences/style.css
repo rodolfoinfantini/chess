@@ -1,0 +1,75 @@
+.main button {
+    background: var(--metal-bg);
+    border-radius: 3px;
+    padding: 10px 20px;
+    color: var(--metal-clr);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.3rem;
+    flex: 1;
+}
+.main button:hover {
+    background: var(--metal-bg-hover);
+    color: var(--metal-clr-hover);
+}
+
+.pref {
+    color: var(--metal-clr);
+}
+
+.pref p {
+    margin-bottom: 10px;
+}
+
+div.main {
+    font-size: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: #262421;
+    padding: 30px;
+    border-radius: 3px;
+    max-width: 95%;
+}
+
+.btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+button.save {
+    width: 100%;
+    padding: 14px 0 14px 0;
+    border-radius: 3px;
+    background: #3692e7;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 150ms;
+    font-size: 1rem;
+    user-select: none;
+}
+
+button.save:hover {
+    background: #56a3eb;
+}
+
+.board-theme button.toggle {
+    color: transparent !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-theme button span {
+    width: 64px;
+    height: 32px;
+    display: block;
+    background-image: url(../assets/board/skins/brown.svg);
+    background-size: 256px;
+}
+
+.board-theme button[data-value='blue'] span {
+    background-image: url(../assets/board/skins/blue.svg);
+}

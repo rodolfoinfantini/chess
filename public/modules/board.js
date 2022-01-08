@@ -2,6 +2,14 @@ const urlParams = new URLSearchParams(window.location.search)
 
 export function createBoard(appendTo = false, stopCallback, socket) {
     const boardElement = document.createElement('board')
+    const preferences = JSON.parse(localStorage.getItem('preferences')) ?? {
+        animationSped: 2,
+        movesIndicator: 1,
+        boardTheme: 'brown',
+    }
+    boardElement.setAttribute('animation-speed', preferences.animationSped)
+    boardElement.setAttribute('moves-indicator', preferences.movesIndicator)
+    boardElement.setAttribute('theme', preferences.boardTheme)
     const board = document.createElement('div')
     board.classList.add('board-content')
     const coordsRows = document.createElement('coords')
@@ -71,19 +79,14 @@ export function createBoard(appendTo = false, stopCallback, socket) {
     const colorToMove = document.createElement('div')
     colorToMove.classList.add('color-to-move')
 
-
-
-
     options.appendChild(flipBtn)
     if (!urlParams.has('r')) options.appendChild(label)
     options.appendChild(stopBtn)
     // options.appendChild(playingAs)
     // options.appendChild(colorToMove)
 
-
     boardElement.appendChild(board)
     boardElement.appendChild(options)
-
 
     if (appendTo) {
         appendTo.appendChild(boardElement)
