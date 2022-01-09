@@ -57,7 +57,7 @@ async function login(username, password) {
         try {
             const encryptedPassword = encrypt(password)
             const user = await mysqlQuery(
-                `select * from users where username = '${username}' and password = '${encryptedPassword}'`
+                `select * from users where (username = '${username}' or email = '${username}') and password = '${encryptedPassword}'`
             )
             if (user.length === 0) {
                 reject(new Error('Invalid username or password'))
@@ -69,7 +69,7 @@ async function login(username, password) {
             }
             const curToken = user[0].token
             if (curToken) {
-                resolve(curToken)
+                resolve(user[0])
                 return
             }
             let newToken = randStr(40)
@@ -80,9 +80,9 @@ async function login(username, password) {
                 }
             }
             await mysqlQuery(
-                `update users set token = '${newToken}' where username = '${username}' and password = '${encryptedPassword}'`
+                `update users set token = '${newToken}' where (username = '${username}' or email = '${username}') and password = '${encryptedPassword}'`
             )
-            resolve(newToken)
+            resolve((await mysqlQuery(`select * from users where token = '${newToken}'`))[0])
         } catch (error) {
             reject(error)
         }
@@ -131,12 +131,12 @@ app.post('/account/login', (req, res) => {
     }
 
     login(username, password)
-        .then((token) => {
-            if (token) {
+        .then((user) => {
+            if (user.token) {
                 res.json({
                     success: true,
-                    token,
-                    username,
+                    token: user.token,
+                    username: user.username,
                 })
             } else {
                 res.json({
