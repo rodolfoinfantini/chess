@@ -1,6 +1,4 @@
-import {
-    puzzleDB
-} from './small-puzzleDB.js'
+import { puzzleDB } from './small-puzzleDB.js'
 
 class Puzzle {
     fen
@@ -24,13 +22,34 @@ class Error {
 
 const puzzles = []
 
-for (let i = 0; i < puzzleDB.length; i++) {
-    const split = puzzleDB[i].split(',')
-    const fen = split[1]
-    const moves = split[2]
-    const rating = split[3]
-    const themes = split[7]
-    puzzles.push(new Puzzle(fen, moves, rating, themes))
+let finished = false
+
+let initializing = false
+
+function init() {
+    if (initializing) {
+        return new Promise((resolve, reject) => {
+            setInterval(() => {
+                if (finished) {
+                    resolve()
+                }
+            })
+        })
+    }
+    if (puzzles.length === 0) {
+        initializing = true
+        const splitted = puzzleDB.split('\n')
+        for (let i = 0; i < splitted.length; i++) {
+            const split = splitted[i].split(',')
+            const fen = split[1]
+            const moves = split[2]
+            const rating = split[3]
+            const themes = split[7]
+            puzzles.push(new Puzzle(fen, moves, rating, themes))
+        }
+        finished = true
+        initializing = false
+    }
 }
 
 function hasTheme(puzzle, themes) {
@@ -43,7 +62,8 @@ function hasTheme(puzzle, themes) {
     return themeNumber === themes.length
 }
 
-export function randomPuzzle(minRating = 0, maxRating = 0, themes = '') {
+export async function randomPuzzle(minRating = 0, maxRating = 0, themes = '') {
+    await init()
     themes = themes.trim()
     if (themes.length > 0) {
         themes = themes.split(',')
@@ -67,12 +87,16 @@ export function randomPuzzle(minRating = 0, maxRating = 0, themes = '') {
         const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)]
         return {
             puzzle: randomPuzzle,
-            found: puzzles.length
+            found: puzzles.length,
         }
     }
 
-    const filtered = puzzles.filter(puzzle => {
-        return (puzzle.rating >= minRating || minRating === 0) && (puzzle.rating <= maxRating || maxRating === 0) && (hasTheme(puzzle, themes) || themes.length === 0)
+    const filtered = puzzles.filter((puzzle) => {
+        return (
+            (puzzle.rating >= minRating || minRating === 0) &&
+            (puzzle.rating <= maxRating || maxRating === 0) &&
+            (hasTheme(puzzle, themes) || themes.length === 0)
+        )
     })
 
     if (filtered.length === 0) {
@@ -82,6 +106,8 @@ export function randomPuzzle(minRating = 0, maxRating = 0, themes = '') {
     const randomPuzzle = filtered[Math.floor(Math.random() * filtered.length)]
     return {
         puzzle: randomPuzzle,
-        found: filtered.length
+        found: filtered.length,
     }
 }
+
+setTimeout(init, 4000)

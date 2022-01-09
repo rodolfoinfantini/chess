@@ -283,8 +283,8 @@ app.post('/account/register', (req, res) => {
         })
 })
 
-app.get('/puzzle/random', (req, res) => {
-    res.json(randomPuzzle(req.query.minRating, req.query.maxRating, req.query.themes))
+app.get('/puzzle/random', async (req, res) => {
+    res.json(await randomPuzzle(req.query.minRating, req.query.maxRating, req.query.themes))
 })
 
 const games = {}
