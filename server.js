@@ -175,11 +175,13 @@ function error(message) {
 
 const verifications = {}
 
+const verificationCodeLength = 4
+
 app.post('/account/verify', async (req, res) => {
     let { email, code } = req.body
     email = email.trim()
     code = code.trim()
-    if (code.length !== 6) {
+    if (code.length !== verificationCodeLength) {
         res.send({
             success: false,
         })
@@ -207,7 +209,7 @@ app.post('/account/verify/resend', (req, res) => {
     let { email } = req.body
     email = email.trim()
     if (verifications[email]) {
-        verifications[email] = '' + randInt(6)
+        verifications[email] = '' + randInt(verificationCodeLength)
         sendEmail(email, 'Chess verification', 'Your verification code is ' + verifications[email])
     }
     res.send('sent!')
@@ -265,7 +267,7 @@ app.post('/account/register', (req, res) => {
         email,
     })
         .then(() => {
-            verifications[email] = '' + randInt(6)
+            verifications[email] = '' + randInt(verificationCodeLength)
             sendEmail(
                 email,
                 'Chess verification',
