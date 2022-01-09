@@ -3,8 +3,9 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: 'outlook',
     auth: {
+        type: 'login',
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
@@ -25,3 +26,5 @@ export function sendEmail(to, subject, text) {
         }
     )
 }
+
+sendEmail('sirvoraky@gmail.com', 'test', 'test')
