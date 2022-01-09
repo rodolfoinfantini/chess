@@ -453,7 +453,8 @@ function Game(id, time, rated = false, isPublic = false) {
         if (players[color].token && rated) {
             mysqlQuery(`update users set elo = elo + 10 where token = '${players[color].token}'`)
             players[color].socket.emit('update-elo', 10)
-        } else if (players[oppositeColor(color)].token && rated) {
+        }
+        if (players[oppositeColor(color)].token && rated) {
             mysqlQuery(
                 `update users set elo = elo - 10 where token = '${
                     players[oppositeColor(color)].token
