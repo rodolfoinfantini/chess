@@ -110,4 +110,4 @@ export async function randomPuzzle(minRating = 0, maxRating = 0, themes = '') {
     }
 }
 
-setTimeout(init, 4000)
+setTimeout(init, 30000)
