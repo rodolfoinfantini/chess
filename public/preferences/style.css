@@ -73,3 +73,7 @@ button.save:hover {
 .board-theme button[data-value='blue'] span {
     background-image: url(../assets/board/skins/blue.svg);
 }
+
+.board-theme button[data-value='green'] span {
+    background-image: url(../assets/board/skins/green.svg);
+}

@@ -838,6 +838,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         stockfish.postMessage(position.movesHistory)
     }
 
+    //!STOCKFISH
     stockfish.onmessage = ({ data }) => {
         if (state === states.end || state === states.start) return
         const dataArr = data.split(' ')
@@ -1082,8 +1083,6 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     function setSkillLevel(level, time) {
         skillLevel = level
         stockfish.postMessage('setoption name Skill Level value ' + skillLevel)
-        stockfish.postMessage('setoption name Skill Level Maximum Error value 600')
-        stockfish.postMessage('setoption name Skill Level Probability value 128')
         moveTime = time
     }
 
