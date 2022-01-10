@@ -26,9 +26,9 @@ const sockets = socketio(server)
 
 app.use(express.static('public'))
 app.use(express.json())
-app.use((req, res) => {
-    res.sendFile('public/404.html', { root: __dirname })
-})
+// app.use((req, res) => {
+//     res.sendFile('public/404.html', { root: __dirname })
+// })
 
 let serverDelay = 2
 let oldServerDelay = 2
@@ -834,9 +834,31 @@ function Game(id, time, rated = false, isPublic = false) {
     }
 }
 
+app.get('*', (req, res) => {
+    if (req.accepts('html')) {
+        if (!res.secure && req.headers.host) {
+            if (
+                !(req.headers.host.includes('127.0.0.1') || req.headers.host.includes('localhost'))
+            ) {
+                res.redirect('https://' + req.headers.host + req.url)
+                return
+            }
+        }
+        res.status(404).sendFile('public/404.html', { root: __dirname })
+        return
+    }
+
+    if (req.accepts('json')) {
+        res.status(404).send({ error: 'Not found' })
+        return
+    }
+
+    res.type('txt').send('Not found')
+})
+
 const port = process.env.PORT || 3000
 
 server.listen(port, () => {
     console.log(`> Server listening on port ${port}`)
-    console.log(`> http://localhost:${port}`)
+    console.log(`> http://127.0.0.1:${port}`)
 })
