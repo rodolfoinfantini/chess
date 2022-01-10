@@ -1,0 +1,30 @@
+body > div {
+    background-color: #262421;
+    padding: 40px;
+    margin-top: 100px;
+    color: #bababa;
+    display: flex;
+    gap: 30px;
+    border-radius: 3px;
+    font-size: 1.3rem;
+}
+
+.msg {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+h1 {
+    font-size: 4rem;
+}
+
+a {
+    color: #3692e7;
+    text-decoration: none;
+}
+
+body > div p {
+    font-size: 1rem;
+}

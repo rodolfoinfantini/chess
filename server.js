@@ -2,6 +2,7 @@ import express from 'express'
 import http from 'http'
 import socketio from 'socket.io'
 import stockfish from 'stockfish'
+import path from 'path'
 
 import { moveString, moveNumber } from './public/modules/constants.js'
 
@@ -17,12 +18,17 @@ import { encrypt } from './modules/encript.js'
 
 import { sendEmail } from './modules/email.js'
 
+const __dirname = path.resolve()
+
 const app = express()
 const server = http.createServer(app)
 const sockets = socketio(server)
 
 app.use(express.static('public'))
 app.use(express.json())
+app.use((req, res) => {
+    res.sendFile('public/404.html', { root: __dirname })
+})
 
 let serverDelay = 2
 let oldServerDelay = 2
@@ -295,14 +301,39 @@ function oppositeColor(color) {
     return color === 'white' ? 'black' : 'white'
 }
 
+const queue = {}
+
+function tryToFindOpponent(socketId) {
+    const queueKeys = Object.keys(queue)
+    if (queueKeys.length <= 1) return
+    const opponentSocketId = queueKeys[0]
+    const opponentSocket = queue[opponentSocketId]
+    delete queue[opponentSocketId]
+    delete queue[socketId]
+    let newId = randStr(10)
+    while (games[newId]) newId = randStr(10)
+    const roomId = newId
+    games[roomId] = Game(roomId, 600, true, false)
+    console.log(`> Room ${roomId}: created`)
+    if (Math.random() < 0.5) {
+        setTimeout(() => {
+            opponentSocket.emit('match-found', roomId)
+        }, 100)
+        sockets.to(socketId).emit('match-found', roomId)
+    } else {
+        setTimeout(() => {
+            sockets.to(socketId).emit('match-found', roomId)
+        }, 100)
+        opponentSocket.emit('match-found', roomId)
+    }
+}
+
 sockets.on('connection', (socket) => {
-    console.log(`> Client connected ${socket.id}`)
     socket.emit('server-delay', serverDelay ?? 2)
 
     socket.on('join-room', ({ roomId, token, color }) => {
         if (games[roomId]) {
             socket.emit('join-room', 'success')
-            console.log(`> Client joined room ${roomId}`)
             games[roomId].join(socket, token, color)
 
             socket.on('disconnect', () => {
@@ -324,6 +355,17 @@ sockets.on('connection', (socket) => {
             })
         }
         socket.emit('get-rooms', rooms)
+    })
+
+    socket.on('find-room', () => {
+        queue[socket.id] = socket
+        tryToFindOpponent(socket.id)
+    })
+    socket.on('find-room-cancel', () => {
+        if (queue[socket.id]) delete queue[socket.id]
+    })
+    socket.on('disconnect', () => {
+        if (queue[socket.id]) delete queue[socket.id]
     })
 
     socket.on('create-room', ({ time, rated, isPublic }) => {
@@ -439,9 +481,6 @@ function Game(id, time, rated = false, isPublic = false) {
             }
         }
         if (data == 'info depth 0 score mate 0') {
-            console.log(
-                `> Room ${id}: Checkmate! ${turn === 'b' ? 'White' : 'Black'} is victorious`
-            )
             win(turn === 'b' ? 'white' : 'black')
         }
     }
@@ -450,9 +489,11 @@ function Game(id, time, rated = false, isPublic = false) {
     engine.postMessage('position startpos')
 
     function win(color) {
+        console.log(`> Room ${id}: ${color} is victorious`)
+        state = 2
         if (players[color].token && rated) {
             mysqlQuery(`update users set elo = elo + 10 where token = '${players[color].token}'`)
-            players[color].socket.emit('update-elo', 10)
+            if (players[color].socket) players[color].socket?.emit('update-elo', 10)
         }
         if (players[oppositeColor(color)].token && rated) {
             mysqlQuery(
@@ -460,16 +501,17 @@ function Game(id, time, rated = false, isPublic = false) {
                     players[oppositeColor(color)].token
                 }'`
             )
-            players[oppositeColor(color)].socket.emit('update-elo', -10)
+            if (players[oppositeColor(color)].socket)
+                players[oppositeColor(color)].socket?.emit('update-elo', -10)
         }
     }
 
     function notYourTurn(color) {
-        if (players[color].socket) players[color].socket.emit('not-your-turn')
+        if (players[color].socket) players[color].socket?.emit('not-your-turn')
     }
 
     function invalidMove() {
-        players[turn === 'w' ? 'black' : 'white'].socket.emit('invalid-move')
+        players[turn === 'w' ? 'black' : 'white'].socket?.emit('invalid-move')
         turn = turn === 'w' ? 'b' : 'w'
         moves.splice(moves.length - 1, 1)
     }
@@ -493,7 +535,7 @@ function Game(id, time, rated = false, isPublic = false) {
             players.white.timer.start()
         }
         engine.postMessage(`go depth 1`)
-        players[turn === 'b' ? 'black' : 'white'].socket.emit(
+        players[turn === 'b' ? 'black' : 'white'].socket?.emit(
             'move',
             new Move(from.x, from.y, to.x, to.y)
         )
@@ -517,6 +559,10 @@ function Game(id, time, rated = false, isPublic = false) {
     }
 
     const rematch = {
+        white: false,
+        black: false,
+    }
+    const draw = {
         white: false,
         black: false,
     }
@@ -559,7 +605,7 @@ function Game(id, time, rated = false, isPublic = false) {
                     if (roomOwner.username === null) {
                         const info = await getEloFromToken(token)
                         if (token != null && info.username == null) {
-                            players[color].socket.emit('sign-out')
+                            players[color].socket?.emit('sign-out')
                             leave(players[color].socket)
                             return
                         }
@@ -610,11 +656,11 @@ function Game(id, time, rated = false, isPublic = false) {
                 start()
             }
         }
-        console.log(`> Player joined in room ${id}`)
+        console.log(`> Room ${id}: player joined`)
     }
 
     function leave(socket, signOut = false) {
-        console.log(`> Player left room ${id}`)
+        console.log(`> Room ${id}: player left`)
         if (socket != players.white.socket && socket != players.black.socket) return
         if (signOut) {
             if (players.white.socket === socket) {
@@ -640,6 +686,7 @@ function Game(id, time, rated = false, isPublic = false) {
                 players.white.socket = null
                 players.white.token = null
                 sockets.to(id).emit('player-disconnected', 'white')
+                win('black')
             }
         } else if (players.black.socket === socket) {
             if (state === 1) {
@@ -647,6 +694,7 @@ function Game(id, time, rated = false, isPublic = false) {
                 players.black.socket = null
                 players.black.token = null
                 sockets.to(id).emit('player-disconnected', 'black')
+                win('white')
             }
         }
         endGame()
@@ -655,19 +703,23 @@ function Game(id, time, rated = false, isPublic = false) {
     async function start() {
         state = 1
 
-        players.white.info = await getEloFromToken(players.white.token)
-        if (players.white.token != null && players.white.info.username == null) {
-            state = 0
-            players.white.socket.emit('sign-out')
-            leave(players.white.socket, true)
-            return
+        if (players.white.token) {
+            players.white.info = await getEloFromToken(players.white.token)
+            if (players.white.token != null && players.white.info.username == null) {
+                state = 0
+                players.white.socket.emit('sign-out')
+                leave(players.white.socket, true)
+                return
+            }
         }
-        players.black.info = await getEloFromToken(players.black.token)
-        if (players.black.token != null && players.black.info.username == null) {
-            state = 0
-            players.black.socket.emit('sign-out')
-            leave(players.black.socket, true)
-            return
+        if (players.black.token) {
+            players.black.info = await getEloFromToken(players.black.token)
+            if (players.black.token != null && players.black.info.username == null) {
+                state = 0
+                players.black.socket.emit('sign-out')
+                leave(players.black.socket, true)
+                return
+            }
         }
 
         sockets.to(id).emit('start', {
@@ -678,7 +730,7 @@ function Game(id, time, rated = false, isPublic = false) {
             },
         })
 
-        players.white.socket.on('move', ({ from, to, promotion }) => {
+        players.white.socket?.on('move', ({ from, to, promotion }) => {
             if (turn === 'b') {
                 notYourTurn('white')
                 return
@@ -687,7 +739,7 @@ function Game(id, time, rated = false, isPublic = false) {
             turn = 'b'
             verifyMove(from, to, promotion ? 'q' : '')
         })
-        players.black.socket.on('move', ({ from, to, promotion }) => {
+        players.black.socket?.on('move', ({ from, to, promotion }) => {
             if (turn === 'w') {
                 notYourTurn('black')
                 return
@@ -697,24 +749,40 @@ function Game(id, time, rated = false, isPublic = false) {
             verifyMove(from, to, promotion ? 'q' : '')
         })
 
-        players.white.socket.on('request-rematch', () => {
+        players.white.socket?.on('request-rematch', () => {
             rematch.white = true
             checkRematch()
         })
 
-        players.black.socket.on('request-rematch', () => {
+        players.black.socket?.on('request-rematch', () => {
             rematch.black = true
             checkRematch()
         })
 
-        players.white.socket.on('resign', () => {
+        players.white.socket?.on('draw', () => {
+            draw.white = true
+            checkDraw()
+        })
+        players.black.socket?.on('draw', () => {
+            draw.black = true
+            checkDraw()
+        })
+
+        players.white.socket?.on('resign', () => {
             win('black')
             sockets.to(id).emit('resign', 'white')
         })
-        players.black.socket.on('resign', () => {
+        players.black.socket?.on('resign', () => {
             win('white')
             sockets.to(id).emit('resign', 'black')
         })
+    }
+
+    function checkDraw() {
+        if (draw.white && draw.black) {
+            state = 2
+            console.log(`> Draw in room ${id}`)
+        }
     }
 
     function checkRematch() {
@@ -727,11 +795,11 @@ function Game(id, time, rated = false, isPublic = false) {
             rematch.white = false
             rematch.black = false
 
-            players.white.timer.stop()
-            players.black.timer.stop()
+            players.white.timer?.stop()
+            players.black.timer?.stop()
 
-            players.white.timer.reset()
-            players.black.timer.reset()
+            players.white.timer?.reset()
+            players.black.timer?.reset()
 
             sockets.to(id).emit('update-timers', {
                 white: secToMs(gameTime),
@@ -750,9 +818,9 @@ function Game(id, time, rated = false, isPublic = false) {
     }
 
     function stop() {
-        console.log(`> Room ${id} closed`)
-        if (players.white.socket) players.white.socket.emit('reset')
-        if (players.black.socket) players.black.socket.emit('reset')
+        console.log(`> Room ${id}: closed`)
+        if (players.white.socket) players.white.socket?.emit('reset')
+        if (players.black.socket) players.black.socket?.emit('reset')
         delete games[id]
     }
 

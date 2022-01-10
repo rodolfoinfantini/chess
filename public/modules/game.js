@@ -184,10 +184,10 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         elements.info.black.username.classList.add('username')
         elements.info.black.elo.classList.add('elo')
 
-        const whiteUsername = players.white.username || 'Anonymous'
-        const blackUsername = players.black.username || 'Anonymous'
-        const whiteElo = players.white.elo || '800?'
-        const blackElo = players.black.elo || '800?'
+        const whiteUsername = players.white?.username || 'Anonymous'
+        const blackUsername = players.black?.username || 'Anonymous'
+        const whiteElo = players.white?.elo || '800?'
+        const blackElo = players.black?.elo || '800?'
 
         elements.info.white.username.textContent = whiteUsername
         elements.info.white.elo.textContent = whiteElo
@@ -677,6 +677,9 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     function draw(str) {
+        if (socket && mode === gamemode.multiplayer) {
+            socket.emit('draw')
+        }
         showInfo(info[str] || info.draw)
     }
 

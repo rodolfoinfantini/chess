@@ -572,3 +572,24 @@ function getRooms() {
         socket.emit('get-rooms')
     })
 }
+
+if (!urlParams.has('r')) {
+    socket.on('match-found', (roomId) => {
+        location.href = `?r=${roomId}`
+    })
+    document.querySelector('.find-room').onclick = () => {
+        if (!document.querySelector('.finding-game')) createFindingDiv()
+    }
+    function createFindingDiv() {
+        const template = document.querySelector('#find-game-template')
+        const div = document.importNode(template.content.firstElementChild, true)
+        div.querySelector('.close-btn').onclick = () => {
+            socket.emit('find-room-cancel')
+            div.remove()
+        }
+        document.body.appendChild(div)
+        setTimeout(() => {
+            socket.emit('find-room')
+        }, 500)
+    }
+}

@@ -26,5 +26,3 @@ export function sendEmail(to, subject, text) {
         }
     )
 }
-
-sendEmail('sirvoraky@gmail.com', 'test', 'test')

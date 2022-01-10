@@ -11,7 +11,7 @@
     height: 100%;
     border: 2px solid transparent;
     border-top-color: #3692e7;
-    animation: spinner 1.2s linear infinite;
+    animation: spinner 0.8s linear infinite;
 }
 
 .spinner.white::after {
