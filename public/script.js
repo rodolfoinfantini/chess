@@ -35,7 +35,7 @@ const pingConfig = {
     },
 }
 
-ping.config(document.querySelector('.ping-wrapper .ping-value'), 2000, pingConfig)
+ping.config(document.querySelector('.ping-wrapper .ping-value'), 5000, pingConfig)
 serverDelay.config(socket, document.querySelector('.ping-wrapper .server-value'), pingConfig)
 
 socket.on('sign-out', () => {

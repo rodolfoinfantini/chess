@@ -26,9 +26,6 @@ const sockets = socketio(server)
 
 app.use(express.static('public'))
 app.use(express.json())
-// app.use((req, res) => {
-//     res.sendFile('public/404.html', { root: __dirname })
-// })
 
 let serverDelay = 2
 let oldServerDelay = 2
