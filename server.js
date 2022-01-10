@@ -836,14 +836,6 @@ function Game(id, time, rated = false, isPublic = false) {
 
 app.get('*', (req, res) => {
     if (req.accepts('html')) {
-        if (!res.secure && req.headers.host) {
-            if (
-                !(req.headers.host.includes('127.0.0.1') || req.headers.host.includes('localhost'))
-            ) {
-                res.redirect('https://' + req.headers.host + req.url)
-                return
-            }
-        }
         res.status(404).sendFile('public/404.html', { root: __dirname })
         return
     }
