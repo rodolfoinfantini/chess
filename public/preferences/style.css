@@ -159,66 +159,12 @@ button.save:hover {
     background-size: contain;
 }
 
-.skin button[data-value='1'] span {
-    background-image: url(../assets/pieces/skin1/wN.svg);
+.skin button img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    pointer-events: none;
 }
-.skin button[data-value='2'] span {
-    background-image: url(../assets/pieces/skin2/wN.svg);
-}
-.skin button[data-value='3'] span {
-    background-image: url(../assets/pieces/skin3/wN.svg);
-}
-.skin button[data-value='4'] span {
-    background-image: url(../assets/pieces/skin4/wN.svg);
-}
-.skin button[data-value='5'] span {
-    background-image: url(../assets/pieces/skin5/wN.svg);
-}
-.skin button[data-value='6'] span {
-    background-image: url(../assets/pieces/skin6/wN.svg);
-}
-.skin button[data-value='7'] span {
-    background-image: url(../assets/pieces/skin7/wN.svg);
-}
-.skin button[data-value='8'] span {
-    background-image: url(../assets/pieces/skin8/wN.svg);
-}
-.skin button[data-value='9'] span {
-    background-image: url(../assets/pieces/skin9/wN.svg);
-}
-.skin button[data-value='10'] span {
-    background-image: url(../assets/pieces/skin10/wN.svg);
-}
-.skin button[data-value='11'] span {
-    background-image: url(../assets/pieces/skin11/wN.svg);
-}
-.skin button[data-value='12'] span {
-    background-image: url(../assets/pieces/skin12/wN.svg);
-}
-.skin button[data-value='13'] span {
-    background-image: url(../assets/pieces/skin13/wN.svg);
-}
-.skin button[data-value='14'] span {
-    background-image: url(../assets/pieces/skin14/wN.svg);
-}
-.skin button[data-value='15'] span {
-    background-image: url(../assets/pieces/skin15/wN.svg);
-}
-.skin button[data-value='16'] span {
-    background-image: url(../assets/pieces/skin16/wN.svg);
-}
-.skin button[data-value='17'] span {
-    background-image: url(../assets/pieces/skin17/wN.svg);
-}
-.skin button[data-value='18'] span {
-    background-image: url(../assets/pieces/skin18/wN.svg);
-}
-.skin button[data-value='19'] span {
-    background-image: url(../assets/pieces/skin19/wN.svg);
-}
-.skin button[data-value='20'] span {
-    background-image: url(../assets/pieces/skin20/wN.svg);
-}
-.skin button[data-value='21'] span {
-    background-image: url(../assets/pieces/skin21/wN.svg);
+.skin button {
+    padding: 0;
 }

@@ -5,7 +5,7 @@ import { play } from './sound.js'
 import { type, color, tile, gamemode, moveString, colorLetter, typeLetter } from './constants.js'
 
 const skins = {
-    s0: 'default',
+    s0: 'skin0',
     s1: 'skin1',
     s2: 'skin2',
     s3: 'skin3',
@@ -235,7 +235,7 @@ export default class Piece {
                 ? JSON.parse(localStorage.getItem('preferences')).skin
                 : '0') ?? '0'
         return `${location.pathname === '/' ? '' : '../'}assets/pieces/${
-            skins['s' + selectedSkin] ?? 'default'
+            skins['s' + selectedSkin] ?? skins['s0']
         }/${colorLetter[this.color]}${typeLetter[this.type]}.svg`
     }
     capture() {
