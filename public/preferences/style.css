@@ -29,7 +29,8 @@ div.main {
     background-color: #262421;
     padding: 30px;
     border-radius: 3px;
-    max-width: 95%;
+    max-width: 1500px;
+    width: 95%;
 }
 
 .btns {
@@ -55,11 +56,17 @@ button.save:hover {
     background: #56a3eb;
 }
 
-.board-theme button.toggle {
+.board-theme button.toggle,
+.skin button.toggle {
     color: transparent !important;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.skin button.toggle,
+.board-theme button.toggle {
+    flex: 1;
 }
 
 .board-theme button span {
@@ -73,7 +80,145 @@ button.save:hover {
 .board-theme button[data-value='blue'] span {
     background-image: url(../assets/board/skins/blue.svg);
 }
-
 .board-theme button[data-value='green'] span {
     background-image: url(../assets/board/skins/green.svg);
+}
+.board-theme button[data-value='purple'] span {
+    background-image: url(../assets/board/skins/purple.svg);
+}
+.board-theme button[data-value='ic'] span {
+    background-image: url(../assets/board/skins/ic.svg);
+}
+
+.board-theme button[data-value='blue2'] span {
+    background-image: url(../assets/board/skins/blue2.jpg);
+}
+.board-theme button[data-value='blue3'] span {
+    background-image: url(../assets/board/skins/blue3.jpg);
+}
+.board-theme button[data-value='blue-marble'] span {
+    background-image: url(../assets/board/skins/blue-marble.jpg);
+}
+.board-theme button[data-value='canvas2'] span {
+    background-image: url(../assets/board/skins/canvas2.jpg);
+}
+.board-theme button[data-value='canvas2'] span {
+    background-image: url(../assets/board/skins/green-plastic.png);
+}
+.board-theme button[data-value='grey'] span {
+    background-image: url(../assets/board/skins/grey.jpg);
+}
+.board-theme button[data-value='horsey'] span {
+    background-image: url(../assets/board/skins/horsey.jpg);
+}
+.board-theme button[data-value='leather'] span {
+    background-image: url(../assets/board/skins/leather.jpg);
+}
+.board-theme button[data-value='maple'] span {
+    background-image: url(../assets/board/skins/maple.jpg);
+}
+.board-theme button[data-value='maple2'] span {
+    background-image: url(../assets/board/skins/maple2.jpg);
+}
+.board-theme button[data-value='marble'] span {
+    background-image: url(../assets/board/skins/marble.jpg);
+}
+.board-theme button[data-value='ncf-board'] span {
+    background-image: url(../assets/board/skins/ncf-board.png);
+}
+.board-theme button[data-value='newspaper'] span {
+    background-image: url(../assets/board/skins/newspaper.png);
+}
+.board-theme button[data-value='olive'] span {
+    background-image: url(../assets/board/skins/olive.jpg);
+}
+.board-theme button[data-value='pink-pyramid'] span {
+    background-image: url(../assets/board/skins/pink-pyramid.png);
+}
+.board-theme button[data-value='purple-diag'] span {
+    background-image: url(../assets/board/skins/purple-diag.png);
+}
+.board-theme button[data-value='wood'] span {
+    background-image: url(../assets/board/skins/wood.jpg);
+}
+.board-theme button[data-value='wood2'] span {
+    background-image: url(../assets/board/skins/wood2.jpg);
+}
+.board-theme button[data-value='wood3'] span {
+    background-image: url(../assets/board/skins/wood3.jpg);
+}
+.board-theme button[data-value='wood4'] span {
+    background-image: url(../assets/board/skins/wood4.jpg);
+}
+
+.skin button span {
+    width: 64px;
+    height: 64px;
+    display: block;
+    background-image: url(../assets/pieces/default/wN.svg);
+    background-size: contain;
+}
+
+.skin button[data-value='1'] span {
+    background-image: url(../assets/pieces/skin1/wN.svg);
+}
+.skin button[data-value='2'] span {
+    background-image: url(../assets/pieces/skin2/wN.svg);
+}
+.skin button[data-value='3'] span {
+    background-image: url(../assets/pieces/skin3/wN.svg);
+}
+.skin button[data-value='4'] span {
+    background-image: url(../assets/pieces/skin4/wN.svg);
+}
+.skin button[data-value='5'] span {
+    background-image: url(../assets/pieces/skin5/wN.svg);
+}
+.skin button[data-value='6'] span {
+    background-image: url(../assets/pieces/skin6/wN.svg);
+}
+.skin button[data-value='7'] span {
+    background-image: url(../assets/pieces/skin7/wN.svg);
+}
+.skin button[data-value='8'] span {
+    background-image: url(../assets/pieces/skin8/wN.svg);
+}
+.skin button[data-value='9'] span {
+    background-image: url(../assets/pieces/skin9/wN.svg);
+}
+.skin button[data-value='10'] span {
+    background-image: url(../assets/pieces/skin10/wN.svg);
+}
+.skin button[data-value='11'] span {
+    background-image: url(../assets/pieces/skin11/wN.svg);
+}
+.skin button[data-value='12'] span {
+    background-image: url(../assets/pieces/skin12/wN.svg);
+}
+.skin button[data-value='13'] span {
+    background-image: url(../assets/pieces/skin13/wN.svg);
+}
+.skin button[data-value='14'] span {
+    background-image: url(../assets/pieces/skin14/wN.svg);
+}
+.skin button[data-value='15'] span {
+    background-image: url(../assets/pieces/skin15/wN.svg);
+}
+.skin button[data-value='16'] span {
+    background-image: url(../assets/pieces/skin16/wN.svg);
+}
+.skin button[data-value='17'] span {
+    background-image: url(../assets/pieces/skin17/wN.svg);
+}
+.skin button[data-value='18'] span {
+    background-image: url(../assets/pieces/skin18/wN.svg);
+}
+.skin button[data-value='19'] span {
+    background-image: url(../assets/pieces/skin19/wN.svg);
+}
+.skin button[data-value='20'] span {
+    background-image: url(../assets/pieces/skin20/wN.svg);
+}
+.skin button[data-value='21'] span {
+    background-image: url(../assets/pieces/skin21/wN.svg);
 }

@@ -3,14 +3,28 @@ const urlParams = new URLSearchParams(window.location.search)
 export function createBoard(appendTo = false, stopCallback, socket) {
     const boardElement = document.createElement('board')
     const preferences = JSON.parse(localStorage.getItem('preferences')) ?? {
-        animationSped: 2,
+        animationSpeed: 2,
         movesIndicator: 1,
         boardTheme: 'brown',
     }
-    boardElement.setAttribute('animation-speed', preferences.animationSped)
+    boardElement.setAttribute('animation-speed', preferences.animationSpeed)
     boardElement.setAttribute('moves-indicator', preferences.movesIndicator)
-    boardElement.setAttribute('theme', preferences.boardTheme)
     const board = document.createElement('div')
+
+    const img = new Image()
+    img.src = location.origin + '/assets/board/skins/' + preferences.boardTheme + '.png'
+    img.onerror = () => {
+        img.src = location.origin + '/assets/board/skins/' + preferences.boardTheme + '.jpg'
+        img.onerror = () => {
+            img.src = location.origin + '/assets/board/skins/' + preferences.boardTheme + '.svg'
+            img.onerror = () => {
+                img.src = location.origin + '/assets/board/skins/brown.svg'
+                img.onerror = () => {}
+            }
+        }
+    }
+    img.onload = () => (board.style.backgroundImage = 'url(' + img.src + ')')
+
     board.classList.add('board-content')
     const coordsRows = document.createElement('coords')
     const coordsColumns = document.createElement('coords')

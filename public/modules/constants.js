@@ -4,17 +4,17 @@ export const type = {
     knight: 'knight',
     bishop: 'bishop',
     queen: 'queen',
-    king: 'king'
+    king: 'king',
 }
 
 export const color = {
     white: 'white',
-    black: 'black'
+    black: 'black',
 }
 
 export const colorLetter = {
     [color.white]: 'w',
-    [color.black]: 'b'
+    [color.black]: 'b',
 }
 
 export const tile = {
@@ -22,7 +22,7 @@ export const tile = {
     selected: 'selected',
     move: 'move',
     capture: 'capture',
-    check: 'check'
+    check: 'check',
 }
 
 export const letterToType = {
@@ -31,34 +31,43 @@ export const letterToType = {
     n: type.knight,
     b: type.bishop,
     q: type.queen,
-    k: type.king
+    k: type.king,
 }
 
 export const letter = {
     [type.pawn]: {
         [color.white]: 'P',
-        [color.black]: 'p'
+        [color.black]: 'p',
     },
     [type.rook]: {
         [color.white]: 'R',
-        [color.black]: 'r'
+        [color.black]: 'r',
     },
     [type.knight]: {
         [color.white]: 'N',
-        [color.black]: 'n'
+        [color.black]: 'n',
     },
     [type.bishop]: {
         [color.white]: 'B',
-        [color.black]: 'b'
+        [color.black]: 'b',
     },
     [type.queen]: {
         [color.white]: 'Q',
-        [color.black]: 'q'
+        [color.black]: 'q',
     },
     [type.king]: {
         [color.white]: 'K',
-        [color.black]: 'k'
-    }
+        [color.black]: 'k',
+    },
+}
+
+export const typeLetter = {
+    [type.pawn]: 'P',
+    [type.rook]: 'R',
+    [type.knight]: 'N',
+    [type.bishop]: 'B',
+    [type.queen]: 'Q',
+    [type.king]: 'K',
 }
 
 export const moveString = {
@@ -77,7 +86,7 @@ export const moveString = {
     y4: '4',
     y5: '3',
     y6: '2',
-    y7: '1'
+    y7: '1',
 }
 
 export const moveNumber = {
@@ -96,7 +105,7 @@ export const moveNumber = {
     y4: '4',
     y3: '5',
     y2: '6',
-    y1: '7'
+    y1: '7',
 }
 
 export const gamemode = {
@@ -105,13 +114,13 @@ export const gamemode = {
     computerVsComputer: 'computerVsComputer',
     multiplayer: 'multiplayer',
     puzzle: 'puzzle',
-    spectator: 'spectator'
+    spectator: 'spectator',
 }
 
 export const state = {
     start: 'start',
     playing: 'playing',
-    end: 'end'
+    end: 'end',
 }
 
 export const info = {
@@ -122,5 +131,5 @@ export const info = {
     draw: 'draw',
     resign: 'resign',
     timeOut: 'timeOut',
-    playerDisconnected: 'playerDisconnected'
+    playerDisconnected: 'playerDisconnected',
 }

@@ -32,13 +32,19 @@ ping.config(document.querySelector('.ping-wrapper .ping-value'), 5000, pingConfi
 serverDelay.config(socket, document.querySelector('.ping-wrapper .server-value'), pingConfig)
 
 const preferences = JSON.parse(localStorage.getItem('preferences')) ?? {
-    animationSped: 2,
+    animationSpeed: 2,
     movesIndicator: 1,
     boardTheme: 'brown',
+    skin: 0,
 }
+if (preferences.skin === undefined) preferences.skin = 0
+if (preferences.animationSpeed === undefined) preferences.animationSpeed = 2
+if (preferences.movesIndicator === undefined) preferences.movesIndicator = 1
+if (preferences.boardTheme === undefined) preferences.boardTheme = 'brown'
+
 save()
 const animBtn = document.querySelector(
-    `.animation-speed .toggle[data-value="${preferences.animationSped}"]`
+    `.animation-speed .toggle[data-value="${preferences.animationSpeed}"]`
 )
 if (animBtn) animBtn.classList.add('selected')
 const movesBtn = document.querySelector(
@@ -49,6 +55,8 @@ const themeBtn = document.querySelector(
     `.board-theme .toggle[data-value="${preferences.boardTheme}"]`
 )
 if (themeBtn) themeBtn.classList.add('selected')
+const skinBtn = document.querySelector(`.skin .toggle[data-value="${preferences.skin}"]`)
+if (skinBtn) skinBtn.classList.add('selected')
 
 const buttons = document.querySelectorAll('button.toggle')
 
@@ -63,14 +71,16 @@ buttons.forEach((button) => {
 
 const saveBtn = document.querySelector('button.save')
 saveBtn.onclick = () => {
-    const animationSped = document.querySelector('.animation-speed .selected').dataset.value
+    const animationSpeed = document.querySelector('.animation-speed .selected').dataset.value
     const movesIndicator = document.querySelector('.moves-indicator .selected').dataset.value
     const boardTheme = document.querySelector('.board-theme .selected').dataset.value
-    preferences.animationSped = animationSped
+    const skin = document.querySelector('.skin .selected').dataset.value
+    preferences.animationSpeed = animationSpeed
     preferences.movesIndicator = movesIndicator
     preferences.boardTheme = boardTheme
+    preferences.skin = skin
     save()
-    saveBtn.textContent = 'SAVED'
+    saveBtn.textContent = 'SAVED ✓'
     setTimeout(() => {
         saveBtn.textContent = 'SAVE'
     }, 1000)

@@ -1,16 +1,33 @@
 import Tile from './tile.js'
 
-import {
-    play
-} from './sound.js'
+import { play } from './sound.js'
 
-import {
-    type,
-    color,
-    tile,
-    gamemode,
-    moveString
-} from './constants.js'
+import { type, color, tile, gamemode, moveString, colorLetter, typeLetter } from './constants.js'
+
+const skins = {
+    s0: 'default',
+    s1: 'skin1',
+    s2: 'skin2',
+    s3: 'skin3',
+    s4: 'skin4',
+    s5: 'skin5',
+    s6: 'skin6',
+    s7: 'skin7',
+    s8: 'skin8',
+    s9: 'skin9',
+    s10: 'skin10',
+    s11: 'skin11',
+    s12: 'skin12',
+    s13: 'skin13',
+    s14: 'skin14',
+    s15: 'skin15',
+    s16: 'skin16',
+    s17: 'skin17',
+    s18: 'skin18',
+    s19: 'skin19',
+    s20: 'skin20',
+    s21: 'skin21',
+}
 
 export default class Piece {
     x
@@ -24,7 +41,15 @@ export default class Piece {
     lastRow = 0
     hasMoved = false
     game
-    constructor(type = type.pawn, pieceColor = color.white, x = 0, y = 0, boardElement, ghost = false, game = {}) {
+    constructor(
+        type = type.pawn,
+        pieceColor = color.white,
+        x = 0,
+        y = 0,
+        boardElement,
+        ghost = false,
+        game = {}
+    ) {
         this.type = type
         this.color = pieceColor
         this.x = x
@@ -54,13 +79,15 @@ export default class Piece {
             xPx = this.boardElement.offsetWidth - xPx
             yPx = this.boardElement.offsetHeight - yPx
         }
-        this.element.style.transform = `translateX(${xPx - (this.element.offsetWidth / 2)}px) translateY(${yPx - (this.element.offsetHeight / 2)}px)`
+        this.element.style.transform = `translateX(${
+            xPx - this.element.offsetWidth / 2
+        }px) translateY(${yPx - this.element.offsetHeight / 2}px)`
     }
     canMove(x, y) {
         return this.legalMoves[posString(x, y)] != undefined
     }
     hasPiece(x, y) {
-        return this.game.pieces.find(piece => piece.x === x && piece.y === y)
+        return this.game.pieces.find((piece) => piece.x === x && piece.y === y)
     }
     move(x, y, force = false) {
         x = +x
@@ -73,7 +100,9 @@ export default class Piece {
 
         if (this.game.getMode() === gamemode.puzzle) {
             const curMove = this.game.getCurrentPuzzleMove()
-            const moveStr = `${moveString['x' + this.x]}${moveString['y' + this.y]}${moveString['x' + x]}${moveString['y' + y]}`
+            const moveStr = `${moveString['x' + this.x]}${moveString['y' + this.y]}${
+                moveString['x' + x]
+            }${moveString['y' + y]}`
             if (curMove !== moveStr) {
                 setTimeout(() => {
                     this.resetPosition()
@@ -115,7 +144,10 @@ export default class Piece {
                 const rook = this.hasPiece(7, y)
                 rook.x = 5
                 rook.resetPosition()
-            } else if (x === 2 && this.game.castling[this.color === color.white ? 'K' : 'k'] === true) {
+            } else if (
+                x === 2 &&
+                this.game.castling[this.color === color.white ? 'K' : 'k'] === true
+            ) {
                 play.stop()
                 play.castle()
                 const rook = this.hasPiece(0, y)
@@ -177,7 +209,9 @@ export default class Piece {
         }
         this.game.setTurn(oppositeColor(this.game.getTurn()))
         if (this.game.isCheck(this.game.getTurn())) {
-            const king = this.game.getPiecesOfType(type.king).find(piece => piece.color === this.game.getTurn())
+            const king = this.game
+                .getPiecesOfType(type.king)
+                .find((piece) => piece.color === this.game.getTurn())
             this.game.tiles.check.push(new Tile(king.x, king.y, this.boardElement, tile.check))
         }
         return returning
@@ -196,7 +230,13 @@ export default class Piece {
         this.element.style.transform = `translateX(${this.x * 100}%) translateY(${this.y * 100}%)`
     }
     getImgSrc() {
-        return `${location.pathname === '/' ? '' : '../'}assets/pieces/${this.color}-${this.type}.svg`
+        const selectedSkin =
+            (localStorage.getItem('preferences')
+                ? JSON.parse(localStorage.getItem('preferences')).skin
+                : '0') ?? '0'
+        return `${location.pathname === '/' ? '' : '../'}assets/pieces/${
+            skins['s' + selectedSkin] ?? 'default'
+        }/${colorLetter[this.color]}${typeLetter[this.type]}.svg`
     }
     capture() {
         this.game.position.halfMoves = 0
@@ -211,8 +251,6 @@ export default class Piece {
         return false
     }
 
-
-
     createLegalMoves() {
         this.legalMoves = {}
         if (this.type === type.pawn) this.createPawnMoves()
@@ -226,16 +264,28 @@ export default class Piece {
         const direction = this.color === color.white ? -1 : 1
         const diagonalLeft = {
             x: this.x - 1,
-            y: this.y + direction
+            y: this.y + direction,
         }
         const diagonalRight = {
             x: this.x + 1,
-            y: this.y + direction
+            y: this.y + direction,
         }
         /* if (this.canCapture(diagonalLeft.x, diagonalLeft.y)) */
-        if (diagonalLeft.x >= 0 && diagonalLeft.x <= 7 && diagonalLeft.y >= 0 && diagonalLeft.y <= 7) this.legalMoves[posString(diagonalLeft.x, diagonalLeft.y)] = true
+        if (
+            diagonalLeft.x >= 0 &&
+            diagonalLeft.x <= 7 &&
+            diagonalLeft.y >= 0 &&
+            diagonalLeft.y <= 7
+        )
+            this.legalMoves[posString(diagonalLeft.x, diagonalLeft.y)] = true
         /* if (this.canCapture(diagonalRight.x, diagonalRight.y))  */
-        if (diagonalRight.x >= 0 && diagonalRight.x <= 7 && diagonalRight.y >= 0 && diagonalRight.y <= 7) this.legalMoves[posString(diagonalRight.x, diagonalRight.y)] = true
+        if (
+            diagonalRight.x >= 0 &&
+            diagonalRight.x <= 7 &&
+            diagonalRight.y >= 0 &&
+            diagonalRight.y <= 7
+        )
+            this.legalMoves[posString(diagonalRight.x, diagonalRight.y)] = true
     }
     createPawnMoves() {
         const direction = this.color === color.white ? -1 : 1
@@ -244,7 +294,7 @@ export default class Piece {
         if (!this.hasPiece(this.x, firstMove)) {
             this.legalMoves[posString(this.x, firstMove)] = false
             if (this.y === initialRow) {
-                const secondMove = this.y + (direction * 2)
+                const secondMove = this.y + direction * 2
                 if (!this.hasPiece(this.x, secondMove)) {
                     this.legalMoves[posString(this.x, secondMove)] = false
                 }
@@ -252,14 +302,16 @@ export default class Piece {
         }
         const diagonalLeft = {
             x: this.x - 1,
-            y: this.y + direction
+            y: this.y + direction,
         }
         const diagonalRight = {
             x: this.x + 1,
-            y: this.y + direction
+            y: this.y + direction,
         }
-        if (this.canCapture(diagonalLeft.x, diagonalLeft.y)) this.legalMoves[posString(diagonalLeft.x, diagonalLeft.y)] = true
-        if (this.canCapture(diagonalRight.x, diagonalRight.y)) this.legalMoves[posString(diagonalRight.x, diagonalRight.y)] = true
+        if (this.canCapture(diagonalLeft.x, diagonalLeft.y))
+            this.legalMoves[posString(diagonalLeft.x, diagonalLeft.y)] = true
+        if (this.canCapture(diagonalRight.x, diagonalRight.y))
+            this.legalMoves[posString(diagonalRight.x, diagonalRight.y)] = true
 
         // en passant
         if (this.y === 3 && this.color === color.white && this.game.enPassant.y === 2) {
@@ -283,22 +335,23 @@ export default class Piece {
         }
     }
     createRookMoves() {
-        const directions = [{
+        const directions = [
+            {
                 x: 1,
-                y: 0
+                y: 0,
             },
             {
                 x: -1,
-                y: 0
+                y: 0,
             },
             {
                 x: 0,
-                y: 1
+                y: 1,
             },
             {
                 x: 0,
-                y: -1
-            }
+                y: -1,
+            },
         ]
         for (let direction of directions) {
             let x = this.x + direction.x
@@ -316,38 +369,39 @@ export default class Piece {
         }
     }
     createKnightMoves() {
-        const directions = [{
+        const directions = [
+            {
                 x: 2,
-                y: 1
+                y: 1,
             },
             {
                 x: 2,
-                y: -1
+                y: -1,
             },
             {
                 x: -2,
-                y: 1
+                y: 1,
             },
             {
                 x: -2,
-                y: -1
+                y: -1,
             },
             {
                 x: 1,
-                y: 2
+                y: 2,
             },
             {
                 x: 1,
-                y: -2
+                y: -2,
             },
             {
                 x: -1,
-                y: 2
+                y: 2,
             },
             {
                 x: -1,
-                y: -2
-            }
+                y: -2,
+            },
         ]
         for (let direction of directions) {
             let x = this.x + direction.x
@@ -362,22 +416,23 @@ export default class Piece {
         }
     }
     createBishopMoves() {
-        const directions = [{
+        const directions = [
+            {
                 x: 1,
-                y: 1
+                y: 1,
             },
             {
                 x: 1,
-                y: -1
+                y: -1,
             },
             {
                 x: -1,
-                y: 1
+                y: 1,
             },
             {
                 x: -1,
-                y: -1
-            }
+                y: -1,
+            },
         ]
         for (let direction of directions) {
             let x = this.x + direction.x
@@ -399,38 +454,39 @@ export default class Piece {
         this.createBishopMoves()
     }
     createKingMoves(attack = false) {
-        const directions = [{
-                x: 1,
-                y: 1
-            },
+        const directions = [
             {
                 x: 1,
-                y: -1
-            },
-            {
-                x: -1,
-                y: 1
-            },
-            {
-                x: -1,
-                y: -1
+                y: 1,
             },
             {
                 x: 1,
-                y: 0
+                y: -1,
             },
             {
                 x: -1,
-                y: 0
+                y: 1,
+            },
+            {
+                x: -1,
+                y: -1,
+            },
+            {
+                x: 1,
+                y: 0,
+            },
+            {
+                x: -1,
+                y: 0,
             },
             {
                 x: 0,
-                y: 1
+                y: 1,
             },
             {
                 x: 0,
-                y: -1
-            }
+                y: -1,
+            },
         ]
         for (let direction of directions) {
             let x = this.x + direction.x
@@ -448,15 +504,25 @@ export default class Piece {
             if (!this.game.isCheck(this.color)) {
                 if (this.color === color.black) {
                     if (this.hasPiece(5, 0) === undefined && this.hasPiece(6, 0) === undefined) {
-                        if (!this.game.isAttack(5, 0, oppositeColor(this.color)) && !this.game.isAttack(6, 0, oppositeColor(this.color))) {
+                        if (
+                            !this.game.isAttack(5, 0, oppositeColor(this.color)) &&
+                            !this.game.isAttack(6, 0, oppositeColor(this.color))
+                        ) {
                             const rook = this.hasPiece(7, 0)
                             if (rook != undefined && rook.hasMoved === false) {
                                 this.legalMoves[posString(6, 0)] = false
                             }
                         }
                     }
-                    if (this.hasPiece(1, 0) === undefined && this.hasPiece(2, 0) === undefined && this.hasPiece(3, 0) === undefined) {
-                        if (!this.game.isAttack(2, 0, oppositeColor(this.color)) && !this.game.isAttack(3, 0, oppositeColor(this.color))) {
+                    if (
+                        this.hasPiece(1, 0) === undefined &&
+                        this.hasPiece(2, 0) === undefined &&
+                        this.hasPiece(3, 0) === undefined
+                    ) {
+                        if (
+                            !this.game.isAttack(2, 0, oppositeColor(this.color)) &&
+                            !this.game.isAttack(3, 0, oppositeColor(this.color))
+                        ) {
                             // if (!this.game.isAttack(1, 0, oppositeColor(this.color)) && !this.game.isAttack(2, 0, oppositeColor(this.color)) && !this.game.isAttack(3, 0, oppositeColor(this.color))) {
                             const rook = this.hasPiece(0, 0)
                             if (rook != undefined && rook.hasMoved === false) {
@@ -466,15 +532,25 @@ export default class Piece {
                     }
                 } else if (this.color === color.white) {
                     if (this.hasPiece(5, 7) === undefined && this.hasPiece(6, 7) === undefined) {
-                        if (!this.game.isAttack(5, 7, oppositeColor(this.color)) && !this.game.isAttack(6, 7, oppositeColor(this.color))) {
+                        if (
+                            !this.game.isAttack(5, 7, oppositeColor(this.color)) &&
+                            !this.game.isAttack(6, 7, oppositeColor(this.color))
+                        ) {
                             const rook = this.hasPiece(7, 7)
                             if (rook != undefined && rook.hasMoved === false) {
                                 this.legalMoves[posString(6, 7)] = false
                             }
                         }
                     }
-                    if (this.hasPiece(1, 7) === undefined && this.hasPiece(2, 7) === undefined && this.hasPiece(3, 7) === undefined) {
-                        if (!this.game.isAttack(2, 7, oppositeColor(this.color)) && !this.game.isAttack(3, 7, oppositeColor(this.color))) {
+                    if (
+                        this.hasPiece(1, 7) === undefined &&
+                        this.hasPiece(2, 7) === undefined &&
+                        this.hasPiece(3, 7) === undefined
+                    ) {
+                        if (
+                            !this.game.isAttack(2, 7, oppositeColor(this.color)) &&
+                            !this.game.isAttack(3, 7, oppositeColor(this.color))
+                        ) {
                             // if (!this.game.isAttack(1, 7, oppositeColor(this.color)) && !this.game.isAttack(2, 7, oppositeColor(this.color)) && !this.game.isAttack(3, 7, oppositeColor(this.color))) {
                             const rook = this.hasPiece(0, 7)
                             if (rook != undefined && rook.hasMoved === false) {
