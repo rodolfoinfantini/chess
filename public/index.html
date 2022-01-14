@@ -29,18 +29,30 @@
 
     <body>
         <header>
+            <a href="/">PLAY</a>
+            <a href="/puzzle">PUZZLES</a>
+
             <div class="ping-wrapper">
-                <div class="latency">
+                <div class="latency" title="Time it takes for a move to reach the server">
                     <span class="ping-text">Ping</span>
                     <span class="ping-value">100 ms</span>
                 </div>
-                <div class="server">
+                <div class="server" title="Time to process a move on the server">
                     <span class="server-text">Server</span>
                     <span class="server-value">2 ms</span>
                 </div>
             </div>
-            <a href="/">PLAY</a>
-            <a href="/puzzle">PUZZLES</a>
+            <div class="info-wrapper">
+                <div class="players" title="Players connected">
+                    <span class="players-text">Connected</span>
+                    <span class="players-value">1</span>
+                </div>
+                <div class="playing" title="Players actually playing a game">
+                    <span class="playing-text">Playing</span>
+                    <span class="playing-value">0</span>
+                </div>
+            </div>
+
             <a href="/login" class="sign-in">SIGN IN</a>
             <button class="sign-out hidden"></button>
             <a href="/preferences" class="preferences"><ion-icon name="settings"></ion-icon></a>
@@ -49,18 +61,42 @@
             <div class="content">
                 <h2>Play Online</h2>
                 <div class="online">
-                    <button class="find-room">Find Game</button>
-                    <button class="create-room">Create Game</button>
-                    <button class="join-room">Join Game</button>
-                    <button class="puzzle"><a href="/puzzle">Puzzle</a></button>
+                    <button
+                        class="find-room"
+                        title="Find someone to play with that is also finding a game"
+                    >
+                        Find Game
+                    </button>
+                    <button
+                        class="create-room"
+                        title="Create a custom game to play with your friends"
+                    >
+                        Create Game
+                    </button>
+                    <button class="join-room" title="Join a game that someone has created">
+                        Join Game
+                    </button>
+                    <button class="puzzle" title="Play a Puzzle">
+                        <a href="/puzzle">Puzzle</a>
+                    </button>
                 </div>
                 <h2>Play Offline</h2>
                 <div class="gamemode">
-                    <button data-mode="playerVsPlayer" class="toggle">Over the board</button>
-                    <button data-mode="playerVsComputer" class="toggle">
+                    <button data-mode="playerVsPlayer" class="toggle" title="Play against yourself">
+                        Over the board
+                    </button>
+                    <button
+                        data-mode="playerVsComputer"
+                        class="toggle"
+                        title="Play against Stockfish"
+                    >
                         Play with the computer
                     </button>
-                    <button data-mode="computerVsComputer" class="toggle">
+                    <button
+                        data-mode="computerVsComputer"
+                        class="toggle"
+                        title="Watch Stockfish playing against itself"
+                    >
                         Computer vs. Computer
                     </button>
                 </div>

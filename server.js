@@ -29,10 +29,24 @@ app.use(express.json())
 
 let serverDelay = 2
 let oldServerDelay = 2
+
+let oldConnections = 0
+
+let playing = 0
+let olfPlaying = 0
 setInterval(() => {
-    if (serverDelay === oldServerDelay) return
-    sockets.sockets.emit('server-delay', serverDelay ?? 2)
-    oldServerDelay = serverDelay
+    if (serverDelay !== oldServerDelay) {
+        oldServerDelay = serverDelay
+        sockets.sockets.emit('server-delay', serverDelay ?? 2)
+    }
+    if (sockets.engine.clientsCount !== oldConnections) {
+        oldConnections = sockets.engine.clientsCount
+        sockets.sockets.emit('connections', oldConnections)
+    }
+    if (playing !== olfPlaying) {
+        olfPlaying = playing
+        sockets.sockets.emit('playing', playing)
+    }
 }, 5000)
 
 async function getEloFromToken(token) {
@@ -326,6 +340,8 @@ function tryToFindOpponent(socketId) {
 }
 
 sockets.on('connection', (socket) => {
+    socket.emit('connections', sockets.engine.clientsCount)
+    socket.emit('playing', playing)
     socket.emit('server-delay', serverDelay ?? 2)
 
     socket.on('join-room', ({ roomId, token, color }) => {
@@ -489,14 +505,18 @@ function Game(id, time, rated = false, isPublic = false) {
         console.log(`> Room ${id}: ${color} is victorious`)
         state = 2
         if (players[color].token && rated) {
-            mysqlQuery(`update users set elo = elo + 10 where token = '${players[color].token}'`)
+            mysqlQuery(
+                `update users set elo = ${players[color].info.elo + 10} where token = '${
+                    players[color].token
+                }'`
+            )
             if (players[color].socket) players[color].socket?.emit('update-elo', 10)
         }
         if (players[oppositeColor(color)].token && rated) {
             mysqlQuery(
-                `update users set elo = elo - 10 where token = '${
-                    players[oppositeColor(color)].token
-                }'`
+                `update users set elo = ${
+                    players[oppositeColor(color)].info.elo - 10
+                } where token = '${players[oppositeColor(color)].token}'`
             )
             if (players[oppositeColor(color)].socket)
                 players[oppositeColor(color)].socket?.emit('update-elo', -10)
@@ -565,7 +585,7 @@ function Game(id, time, rated = false, isPublic = false) {
     }
 
     async function join(socket, token, color) {
-        if (state === 3) {
+        if (state === 2) {
             socket.emit('join-room', 'error:Game already finished')
             return
         }
@@ -641,14 +661,13 @@ function Game(id, time, rated = false, isPublic = false) {
             } else if (players.black.timer.isRunning) {
                 running = 'black'
             }
-            console.log('white', players.white.timer.getTime())
-            console.log('black', players.black.timer.getTime())
             sockets.to(id + '-spectator').emit('update-timers', {
                 white: players.white.timer.getTime(),
                 black: players.black.timer.getTime(),
                 running: running,
             })
         } else {
+            playing++
             if (players.black.socket !== null && players.white.socket !== null) {
                 start()
             }
@@ -659,6 +678,7 @@ function Game(id, time, rated = false, isPublic = false) {
     function leave(socket, signOut = false) {
         console.log(`> Room ${id}: player left`)
         if (socket != players.white.socket && socket != players.black.socket) return
+        playing--
         if (signOut) {
             if (players.white.socket === socket) {
                 players.white.socket = null
@@ -672,10 +692,10 @@ function Game(id, time, rated = false, isPublic = false) {
             return
         }
         if (state === 0 || state === 2) {
-            players.white.socket = null
-            players.black.socket = null
-            stop()
-            return
+            if (players.white.socket === socket) players.white.socket = null
+            if (players.black.socket === socket) players.black.socket = null
+            /* stop()
+            return */
         }
         if (players.white.socket === socket) {
             if (state === 1) {

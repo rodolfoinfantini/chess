@@ -29,18 +29,29 @@
 
     <body>
         <header>
+            <a href="../">PLAY</a>
+            <a href="/puzzle">PUZZLES</a>
+
             <div class="ping-wrapper">
-                <div class="latency">
+                <div class="latency" title="Time it takes for a move to reach the server">
                     <span class="ping-text">Ping</span>
                     <span class="ping-value">100 ms</span>
                 </div>
-                <div class="server">
+                <div class="server" title="Time to process a move on the server">
                     <span class="server-text">Server</span>
                     <span class="server-value">2 ms</span>
                 </div>
             </div>
-            <a href="../">PLAY</a>
-            <a href="/puzzle">PUZZLES</a>
+            <div class="info-wrapper">
+                <div class="players" title="Players connected">
+                    <span class="players-text">Connected</span>
+                    <span class="players-value">1</span>
+                </div>
+                <div class="playing" title="Players actually playing a game">
+                    <span class="playing-text">Playing</span>
+                    <span class="playing-value">0</span>
+                </div>
+            </div>
             <a href="../login" class="sign-in">SIGN IN</a>
             <button class="sign-out hidden"></button>
             <a href="../preferences" class="preferences"><ion-icon name="settings"></ion-icon></a>
