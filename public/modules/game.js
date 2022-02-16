@@ -486,6 +486,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         draggingPiece = clickedPiece
         draggingPiece.moveElement(pos.x, pos.y)
         draggingPiece.createLegalMoves()
+        draggingPiece.element.classList.add('dragging')
 
         ghostPiece = new Piece(
             draggingPiece.type,
@@ -522,6 +523,9 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
     board.onmouseleave = () => {
         if (mode === gamemode.spectator) return
+        board
+            .querySelectorAll('piece.dragging')
+            .forEach((piece) => piece.classList.remove('dragging'))
         resetAllPieces()
         isClicking = false
         if (ghostPiece) {
@@ -536,6 +540,9 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         if (state !== states.playing) return
         if (!isClicking) return
         isClicking = false
+        board
+            .querySelectorAll('piece.dragging')
+            .forEach((piece) => piece.classList.remove('dragging'))
         move(clientX, clientY)
     }
 
