@@ -2,7 +2,15 @@ import Tile from './tile.js'
 
 import { play } from './sound.js'
 
-import { type, color, tile, gamemode, moveString, colorLetter, typeLetter } from './constants.js'
+import {
+    type,
+    color,
+    tile,
+    gamemode,
+    moveString,
+    colorLetter,
+    typeLetter,
+} from './constants.js'
 
 const skins = {
     s0: 'skin0',
@@ -100,9 +108,9 @@ export default class Piece {
 
         if (this.game.getMode() === gamemode.puzzle) {
             const curMove = this.game.getCurrentPuzzleMove()
-            const moveStr = `${moveString['x' + this.x]}${moveString['y' + this.y]}${
-                moveString['x' + x]
-            }${moveString['y' + y]}`
+            const moveStr = `${moveString['x' + this.x]}${
+                moveString['y' + this.y]
+            }${moveString['x' + x]}${moveString['y' + y]}`
             if (curMove !== moveStr) {
                 setTimeout(() => {
                     this.resetPosition()
@@ -116,7 +124,11 @@ export default class Piece {
         const oldHalfMoves = this.game.position.halfMoves
         let capture = false
         const piece = this.hasPiece(x, y)
-        if (this.type === type.pawn && x === this.game.enPassant.x && y === this.game.enPassant.y) {
+        if (
+            this.type === type.pawn &&
+            x === this.game.enPassant.x &&
+            y === this.game.enPassant.y
+        ) {
             capture = this.hasPiece(x, this.color === color.white ? 3 : 4)
         } else if (piece) capture = piece
         else {
@@ -137,8 +149,11 @@ export default class Piece {
         }
         let reverseCastling1 = false
         let reverseCastling2 = false
-        if (this.type === type.king && this.hasMoved === false) {
-            if (x === 6 && this.game.castling[this.color === color.white ? 'K' : 'k'] === true) {
+        if (this.type === type.king && !this.hasMoved) {
+            if (
+                x === 6 &&
+                this.game.castling[this.color === color.white ? 'K' : 'k']
+            ) {
                 play.stop()
                 play.castle()
                 const rook = this.hasPiece(7, y)
@@ -146,7 +161,7 @@ export default class Piece {
                 rook.resetPosition()
             } else if (
                 x === 2 &&
-                this.game.castling[this.color === color.white ? 'K' : 'k'] === true
+                this.game.castling[this.color === color.white ? 'K' : 'k']
             ) {
                 play.stop()
                 play.castle()
@@ -155,12 +170,16 @@ export default class Piece {
                 rook.resetPosition()
             }
 
-            if (this.game.castling[this.color === color.white ? 'Q' : 'q'] === true) {
-                this.game.castling[this.color === color.white ? 'Q' : 'q'] = false
+            if (this.game.castling[this.color === color.white ? 'Q' : 'q']) {
+                this.game.castling[
+                    this.color === color.white ? 'Q' : 'q'
+                ] = false
                 reverseCastling1 = this.color === color.white ? 'Q' : 'q'
             }
-            if (this.game.castling[this.color === color.white ? 'K' : 'k'] === true) {
-                this.game.castling[this.color === color.white ? 'K' : 'k'] = false
+            if (this.game.castling[this.color === color.white ? 'K' : 'k']) {
+                this.game.castling[
+                    this.color === color.white ? 'K' : 'k'
+                ] = false
                 reverseCastling2 = this.color === color.white ? 'K' : 'k'
             }
         }
@@ -197,8 +216,12 @@ export default class Piece {
         this.game.clearTiles('lastMove')
         this.game.clearTiles('check')
         this.setElementPosition()
-        this.game.tiles.lastMove.push(new Tile(oldX, oldY, this.boardElement, tile.lastMove))
-        this.game.tiles.lastMove.push(new Tile(this.x, this.y, this.boardElement, tile.lastMove))
+        this.game.tiles.lastMove.push(
+            new Tile(oldX, oldY, this.boardElement, tile.lastMove)
+        )
+        this.game.tiles.lastMove.push(
+            new Tile(this.x, this.y, this.boardElement, tile.lastMove)
+        )
         let returning = true
         if (this.y === this.lastRow && this.type === type.pawn) {
             this.element.classList.remove(this.type)
@@ -212,7 +235,9 @@ export default class Piece {
             const king = this.game
                 .getPiecesOfType(type.king)
                 .find((piece) => piece.color === this.game.getTurn())
-            this.game.tiles.check.push(new Tile(king.x, king.y, this.boardElement, tile.check))
+            this.game.tiles.check.push(
+                new Tile(king.x, king.y, this.boardElement, tile.check)
+            )
         }
         return returning
     }
@@ -227,7 +252,9 @@ export default class Piece {
         this.setElementPosition()
     }
     setElementPosition() {
-        this.element.style.transform = `translateX(${this.x * 100}%) translateY(${this.y * 100}%)`
+        this.element.style.transform = `translateX(${
+            this.x * 100
+        }%) translateY(${this.y * 100}%)`
     }
     getImgSrc() {
         const selectedSkin =
@@ -314,23 +341,55 @@ export default class Piece {
             this.legalMoves[posString(diagonalRight.x, diagonalRight.y)] = true
 
         // en passant
-        if (this.y === 3 && this.color === color.white && this.game.enPassant.y === 2) {
+        if (
+            this.y === 3 &&
+            this.color === color.white &&
+            this.game.enPassant.y === 2
+        ) {
             const leftPawn = this.hasPiece(this.x - 1, this.y)
-            if (leftPawn && leftPawn.type === type.pawn && this.game.enPassant.x === this.x - 1) {
-                this.legalMoves[posString(this.game.enPassant.x, this.game.enPassant.y)] = false
+            if (
+                leftPawn &&
+                leftPawn.type === type.pawn &&
+                this.game.enPassant.x === this.x - 1
+            ) {
+                this.legalMoves[
+                    posString(this.game.enPassant.x, this.game.enPassant.y)
+                ] = false
             }
             const rightPawn = this.hasPiece(this.x + 1, this.y)
-            if (rightPawn && rightPawn.type === type.pawn && this.game.enPassant.x === this.x + 1) {
-                this.legalMoves[posString(this.game.enPassant.x, this.game.enPassant.y)] = false
+            if (
+                rightPawn &&
+                rightPawn.type === type.pawn &&
+                this.game.enPassant.x === this.x + 1
+            ) {
+                this.legalMoves[
+                    posString(this.game.enPassant.x, this.game.enPassant.y)
+                ] = false
             }
-        } else if (this.y === 4 && this.color === color.black && this.game.enPassant.y === 5) {
+        } else if (
+            this.y === 4 &&
+            this.color === color.black &&
+            this.game.enPassant.y === 5
+        ) {
             const leftPawn = this.hasPiece(this.x - 1, this.y)
-            if (leftPawn && leftPawn.type === type.pawn && this.game.enPassant.x === this.x - 1) {
-                this.legalMoves[posString(this.game.enPassant.x, this.game.enPassant.y)] = false
+            if (
+                leftPawn &&
+                leftPawn.type === type.pawn &&
+                this.game.enPassant.x === this.x - 1
+            ) {
+                this.legalMoves[
+                    posString(this.game.enPassant.x, this.game.enPassant.y)
+                ] = false
             }
             const rightPawn = this.hasPiece(this.x + 1, this.y)
-            if (rightPawn && rightPawn.type === type.pawn && this.game.enPassant.x === this.x + 1) {
-                this.legalMoves[posString(this.game.enPassant.x, this.game.enPassant.y)] = false
+            if (
+                rightPawn &&
+                rightPawn.type === type.pawn &&
+                this.game.enPassant.x === this.x + 1
+            ) {
+                this.legalMoves[
+                    posString(this.game.enPassant.x, this.game.enPassant.y)
+                ] = false
             }
         }
     }
@@ -503,9 +562,16 @@ export default class Piece {
         if (this.hasMoved === false && attack === false) {
             if (!this.game.isCheck(this.color)) {
                 if (this.color === color.black) {
-                    if (this.hasPiece(5, 0) === undefined && this.hasPiece(6, 0) === undefined) {
+                    if (
+                        this.hasPiece(5, 0) === undefined &&
+                        this.hasPiece(6, 0) === undefined
+                    ) {
                         if (
-                            !this.game.isAttack(5, 0, oppositeColor(this.color)) &&
+                            !this.game.isAttack(
+                                5,
+                                0,
+                                oppositeColor(this.color)
+                            ) &&
                             !this.game.isAttack(6, 0, oppositeColor(this.color))
                         ) {
                             const rook = this.hasPiece(7, 0)
@@ -520,7 +586,11 @@ export default class Piece {
                         this.hasPiece(3, 0) === undefined
                     ) {
                         if (
-                            !this.game.isAttack(2, 0, oppositeColor(this.color)) &&
+                            !this.game.isAttack(
+                                2,
+                                0,
+                                oppositeColor(this.color)
+                            ) &&
                             !this.game.isAttack(3, 0, oppositeColor(this.color))
                         ) {
                             // if (!this.game.isAttack(1, 0, oppositeColor(this.color)) && !this.game.isAttack(2, 0, oppositeColor(this.color)) && !this.game.isAttack(3, 0, oppositeColor(this.color))) {
@@ -531,9 +601,16 @@ export default class Piece {
                         }
                     }
                 } else if (this.color === color.white) {
-                    if (this.hasPiece(5, 7) === undefined && this.hasPiece(6, 7) === undefined) {
+                    if (
+                        this.hasPiece(5, 7) === undefined &&
+                        this.hasPiece(6, 7) === undefined
+                    ) {
                         if (
-                            !this.game.isAttack(5, 7, oppositeColor(this.color)) &&
+                            !this.game.isAttack(
+                                5,
+                                7,
+                                oppositeColor(this.color)
+                            ) &&
                             !this.game.isAttack(6, 7, oppositeColor(this.color))
                         ) {
                             const rook = this.hasPiece(7, 7)
@@ -548,7 +625,11 @@ export default class Piece {
                         this.hasPiece(3, 7) === undefined
                     ) {
                         if (
-                            !this.game.isAttack(2, 7, oppositeColor(this.color)) &&
+                            !this.game.isAttack(
+                                2,
+                                7,
+                                oppositeColor(this.color)
+                            ) &&
                             !this.game.isAttack(3, 7, oppositeColor(this.color))
                         ) {
                             // if (!this.game.isAttack(1, 7, oppositeColor(this.color)) && !this.game.isAttack(2, 7, oppositeColor(this.color)) && !this.game.isAttack(3, 7, oppositeColor(this.color))) {
