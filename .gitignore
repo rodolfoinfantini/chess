@@ -3,6 +3,4 @@ TODO.txt
 node_modules
 .env
 lichess
-dockerfile
 docker-compose.yml
-.dockerignore
