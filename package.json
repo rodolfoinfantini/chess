@@ -1,22 +1,26 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "crypto": "^1.0.1",
-    "dotenv": "^10.0.0",
-    "express": "^4.17.2",
-    "mysql2": "^2.3.3",
-    "nodemailer": "^6.7.2",
-    "socket.io": "^1.7.4",
-    "stockfish": "^11.0.0"
-  }
+    "name": "server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server.js",
+    "type": "module",
+    "scripts": {
+        "build": "docker build . -t rodolfoinfantini/chess",
+        "run": "docker compose up -d",
+        "deploy": "npm run build && npm run run",
+        "start": "node server.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "crypto": "^1.0.1",
+        "dotenv": "^16.0.3",
+        "express": "^4.17.2",
+        "mysql2": "^3.3.2",
+        "nodemailer": "^6.7.2",
+        "socket.io": "^4.6.1",
+        "stockfish": "^15.0.0"
+    }
 }

@@ -101,7 +101,7 @@ export function insertInto(table, valuesToInsert) {
                 value.push(
                     (typeof row[col] === 'string' ? '"' : '') +
                         row[col] +
-                        (typeof row[col] === 'string' ? '"' : '')
+                        (typeof row[col] === 'string' ? '"' : ''),
                 )
             }
             values.push(value.join(', '))

@@ -1,28 +1,25 @@
 import express from 'express'
-import http from 'http'
-import socketio from 'socket.io'
-import stockfish from 'stockfish'
+import { Server } from 'socket.io'
+import { createServer } from 'http'
+
 import path from 'path'
 
 import { moveString, moveNumber } from './public/modules/constants.js'
-
 import randStr, { randInt } from './modules/randomString.js'
-
 import Timer, { msToSec } from './public/modules/timer.js'
-
 import { randomPuzzle } from './modules/puzzle.js'
-
 import { mysqlQuery, insertInto } from './modules/mysql.js'
-
 import { encrypt } from './modules/encript.js'
-
 import { sendEmail } from './modules/email.js'
+import { loadEngine } from './loadEngine.js'
+
+sendEmail(process.env.EMAIL_USER, 'start', 'start')
 
 const __dirname = path.resolve()
 
 const app = express()
-const server = http.createServer(app)
-const sockets = socketio(server)
+const httpServer = createServer(app)
+const io = new Server(httpServer)
 
 app.use(express.static('public'))
 app.use(express.json())
@@ -37,15 +34,15 @@ let olfPlaying = 0
 setInterval(() => {
     if (serverDelay !== oldServerDelay) {
         oldServerDelay = serverDelay
-        sockets.sockets.emit('server-delay', serverDelay ?? 2)
+        io.sockets.emit('server-delay', serverDelay ?? 2)
     }
-    if (sockets.engine.clientsCount !== oldConnections) {
-        oldConnections = sockets.engine.clientsCount
-        sockets.sockets.emit('connections', oldConnections)
+    if (io.engine.clientsCount !== oldConnections) {
+        oldConnections = io.engine.clientsCount
+        io.sockets.emit('connections', oldConnections)
     }
     if (playing !== olfPlaying) {
         olfPlaying = playing
-        sockets.sockets.emit('playing', playing)
+        io.sockets.emit('playing', playing)
     }
 }, 5000)
 
@@ -74,7 +71,7 @@ async function login(username, password) {
         try {
             const encryptedPassword = encrypt(password)
             const user = await mysqlQuery(
-                `select * from users where (username = '${username}' or email = '${username}') and password = '${encryptedPassword}'`
+                `select * from users where (username = '${username}' or email = '${username}') and password = '${encryptedPassword}'`,
             )
             if (user.length === 0) {
                 reject(new Error('Invalid username or password'))
@@ -97,7 +94,7 @@ async function login(username, password) {
                 }
             }
             await mysqlQuery(
-                `update users set token = '${newToken}' where (username = '${username}' or email = '${username}') and password = '${encryptedPassword}'`
+                `update users set token = '${newToken}' where (username = '${username}' or email = '${username}') and password = '${encryptedPassword}'`,
             )
             resolve((await mysqlQuery(`select * from users where token = '${newToken}'`))[0])
         } catch (error) {
@@ -236,8 +233,6 @@ app.post('/account/register', (req, res) => {
     let { username, password, confirmPassword, email } = req.body
 
     username = username.trim()
-    password = password.trim()
-    confirmPassword = confirmPassword.trim()
     email = email.trim()
 
     //empty
@@ -257,7 +252,7 @@ app.post('/account/register', (req, res) => {
     //validation
     if (!validadeUsername(username)) {
         res.json(
-            error('Username must have only letter and numbers and be between 4 and 20 characters')
+            error('Username must have only letter and numbers and be between 4 and 20 characters'),
         )
         return
     }
@@ -288,7 +283,7 @@ app.post('/account/register', (req, res) => {
             sendEmail(
                 email,
                 'Chess verification',
-                'Your verification code is ' + verifications[email]
+                'Your verification code is ' + verifications[email],
             )
             res.json({
                 success: true,
@@ -330,17 +325,19 @@ function tryToFindOpponent(socketId) {
         setTimeout(() => {
             opponentSocket.emit('match-found', roomId)
         }, 100)
-        sockets.to(socketId).emit('match-found', roomId)
+        io.to(socketId).emit('match-found', roomId)
     } else {
         setTimeout(() => {
-            sockets.to(socketId).emit('match-found', roomId)
+            io.to(socketId).emit('match-found', roomId)
         }, 100)
         opponentSocket.emit('match-found', roomId)
     }
 }
 
-sockets.on('connection', (socket) => {
-    socket.emit('connections', sockets.engine.clientsCount)
+io.on('connection', (socket) => {
+    console.log(`> socket connected ${socket.id}`)
+
+    socket.emit('connections', io.engine.clientsCount)
     socket.emit('playing', playing)
     socket.emit('server-delay', serverDelay ?? 2)
 
@@ -470,17 +467,17 @@ function Game(id, time, rated = false, isPublic = false) {
     setInterval(() => {
         if (msToSec(players.white.timer.getTime()) <= 0) {
             win('black')
-            sockets.to(id).emit('time-out', 'white')
+            io.to(id).emit('time-out', 'white')
         } else if (msToSec(players.black.timer.getTime()) <= 0) {
             win('white')
-            sockets.to(id).emit('time-out', 'black')
+            io.to(id).emit('time-out', 'black')
         }
     }, 100)
 
     let turn = 'w'
     const moves = []
 
-    const engine = stockfish()
+    const engine = loadEngine()
 
     engine.onmessage = (data) => {
         data = data + ''
@@ -508,7 +505,7 @@ function Game(id, time, rated = false, isPublic = false) {
             mysqlQuery(
                 `update users set elo = ${players[color].info.elo + 10} where token = '${
                     players[color].token
-                }'`
+                }'`,
             )
             if (players[color].socket) players[color].socket?.emit('update-elo', 10)
         }
@@ -516,7 +513,7 @@ function Game(id, time, rated = false, isPublic = false) {
             mysqlQuery(
                 `update users set elo = ${
                     players[oppositeColor(color)].info.elo - 10
-                } where token = '${players[oppositeColor(color)].token}'`
+                } where token = '${players[oppositeColor(color)].token}'`,
             )
             if (players[oppositeColor(color)].socket)
                 players[oppositeColor(color)].socket?.emit('update-elo', -10)
@@ -554,10 +551,10 @@ function Game(id, time, rated = false, isPublic = false) {
         engine.postMessage(`go depth 1`)
         players[turn === 'b' ? 'black' : 'white'].socket?.emit(
             'move',
-            new Move(from.x, from.y, to.x, to.y)
+            new Move(from.x, from.y, to.x, to.y),
         )
-        sockets.to(id + '-spectator').emit('move', new Move(from.x, from.y, to.x, to.y))
-        sockets.to(id).emit('update-timers', {
+        io.to(id + '-spectator').emit('move', new Move(from.x, from.y, to.x, to.y))
+        io.to(id).emit('update-timers', {
             white: players.white.timer.getTime(),
             black: players.black.timer.getTime(),
             running: turn === 'b' ? 'black' : 'white',
@@ -661,7 +658,7 @@ function Game(id, time, rated = false, isPublic = false) {
             } else if (players.black.timer.isRunning) {
                 running = 'black'
             }
-            sockets.to(id + '-spectator').emit('update-timers', {
+            io.to(id + '-spectator').emit('update-timers', {
                 white: players.white.timer.getTime(),
                 black: players.black.timer.getTime(),
                 running: running,
@@ -702,7 +699,7 @@ function Game(id, time, rated = false, isPublic = false) {
                 state = 2
                 players.white.socket = null
                 players.white.token = null
-                sockets.to(id).emit('player-disconnected', 'white')
+                io.to(id).emit('player-disconnected', 'white')
                 win('black')
             }
         } else if (players.black.socket === socket) {
@@ -710,7 +707,7 @@ function Game(id, time, rated = false, isPublic = false) {
                 state = 2
                 players.black.socket = null
                 players.black.token = null
-                sockets.to(id).emit('player-disconnected', 'black')
+                io.to(id).emit('player-disconnected', 'black')
                 win('white')
             }
         }
@@ -739,7 +736,7 @@ function Game(id, time, rated = false, isPublic = false) {
             }
         }
 
-        sockets.to(id).emit('start', {
+        io.to(id).emit('start', {
             gameTime,
             players: {
                 white: players.white.info,
@@ -787,11 +784,11 @@ function Game(id, time, rated = false, isPublic = false) {
 
         players.white.socket?.on('resign', () => {
             win('black')
-            sockets.to(id).emit('resign', 'white')
+            io.to(id).emit('resign', 'white')
         })
         players.black.socket?.on('resign', () => {
             win('white')
-            sockets.to(id).emit('resign', 'black')
+            io.to(id).emit('resign', 'black')
         })
     }
 
@@ -818,13 +815,13 @@ function Game(id, time, rated = false, isPublic = false) {
             players.white.timer?.reset()
             players.black.timer?.reset()
 
-            sockets.to(id).emit('update-timers', {
+            io.to(id).emit('update-timers', {
                 white: secToMs(gameTime),
                 black: secToMs(gameTime),
                 running: null,
             })
 
-            sockets.to(id).emit('accepted-rematch')
+            io.to(id).emit('accepted-rematch')
         }
     }
 
@@ -838,6 +835,7 @@ function Game(id, time, rated = false, isPublic = false) {
         console.log(`> Room ${id}: closed`)
         if (players.white.socket) players.white.socket?.emit('reset')
         if (players.black.socket) players.black.socket?.emit('reset')
+        engine.terminate()
         delete games[id]
     }
 
@@ -867,7 +865,6 @@ app.get('*', (req, res) => {
 
 const port = process.env.PORT || 3000
 
-server.listen(port, () => {
+httpServer.listen(port, () => {
     console.log(`> Server listening on port ${port}`)
-    console.log(`> http://127.0.0.1:${port}`)
 })
