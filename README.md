@@ -18,11 +18,11 @@ Made with vanilla JavaScript, using socket.io, Node JS, MySQL and [Stockfish.js]
 8. [Settings](#settings)
 9. [Login and Register](#login-and-register)
 
-### Demo
+### Demo:
 
 [![Watch the video](screenshots/video.png)](https://youtu.be/3foDjZ4LCQM)
 
-### Run locally
+### Run locally:
 
 - You can run it without Docker using node 16 (It **MUST** be 16) providing the environment variables in the `.env` file. But it is easier to run with the Dockerfile and docker compose:
 
@@ -101,7 +101,7 @@ docker compose down
 ![Create Game Screenshot](/screenshots/creategame.png)
 ![Join Game Screenshot](/screenshots/joingame.png)
 
-### Puzzles
+### Puzzles:
 
 -   300,000 puzzles
 -   Filter by rating and theme
