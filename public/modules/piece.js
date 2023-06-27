@@ -37,11 +37,13 @@ export default class Piece {
     boardElement
     element
     ghost
+    ghostImage
     legalMoves = {}
     lastRow = 0
     hasMoved = false
     game
     initialPosition = {}
+    imageSrc = ''
     constructor(
         type = type.pawn,
         pieceColor = color.white,
@@ -50,6 +52,7 @@ export default class Piece {
         boardElement,
         ghost = false,
         game = {},
+        ghostImage = '',
     ) {
         this.type = type
         this.color = pieceColor
@@ -57,6 +60,7 @@ export default class Piece {
         this.y = y
         this.boardElement = boardElement
         this.ghost = ghost
+        this.ghostImage = ghostImage
         this.lastRow = this.color == color.white ? 0 : 7
         this.game = game
         this.initialPosition = { x, y }
@@ -64,17 +68,26 @@ export default class Piece {
     render() {
         this.boardElement.appendChild(this.createElement())
     }
+    createImage() {
+        // tries to load the column based image, if it fails, it loads the normal image
+        const image = new Image()
+        let lastSrc = ''
+        image.onerror = () => {
+            const newSrc = this.getNormalImageSrc()
+            if (newSrc === lastSrc) return // prevents infinite loop
+            lastSrc = newSrc
+            image.src = newSrc
+        }
+        image.src = this.getColumnBasedImageSrc()
+        return image
+    }
     createElement() {
         this.element = document.createElement('piece')
         if (this.ghost) this.element.classList.add('ghost')
         this.element.classList.add(this.type)
         this.element.classList.add(this.color)
         this.setElementPosition()
-        const img = new Image()
-        this.getImgSrc().then((src) => {
-            img.src = src
-            this.element.appendChild(img)
-        })
+        this.element.appendChild(this.createImage())
         return this.element
     }
     moveElement(xPx, yPx) {
@@ -203,10 +216,9 @@ export default class Piece {
         if (this.y === this.lastRow && this.type === type.pawn) {
             this.element.classList.remove(this.type)
             this.type = type.queen
+            this.initialPosition = { x: this.x, y: this.y }
             this.element.classList.add(this.type)
-            this.getImgSrc().then((src) => {
-                this.element.querySelector('img').src = src
-            })
+            this.element.querySelector('img').src = this.getColumnBasedImageSrc()
             returning = 'q'
         }
         this.game.setTurn(oppositeColor(this.game.getTurn()))
@@ -231,12 +243,16 @@ export default class Piece {
     setElementPosition() {
         this.element.style.transform = `translateX(${this.x * 100}%) translateY(${this.y * 100}%)`
     }
-    async getImgSrc() {
-        const selectedSkin = getSelectedSkin()
-
-        const skinPath = `${location.pathname === '/' ? '' : '../'}assets/pieces/${
-            skins['s' + selectedSkin] ?? skins['s0']
+    getSkinPath(skin) {
+        return `${location.pathname === '/' ? '' : '../'}assets/pieces/${
+            skins['s' + skin] ?? skins['s0']
         }`
+    }
+    getColumnBasedImageSrc() {
+        if (this.ghost && this.ghostImage) return this.ghostImage
+
+        const selectedSkin = getSelectedSkin()
+        const skinPath = this.getSkinPath(selectedSkin)
 
         const pieceName = colorLetter[this.color] + typeLetter[this.type]
 
@@ -244,9 +260,20 @@ export default class Piece {
         const columnBasedPath = `${pieceName}/${pieceName}${column}.svg` // e.g. wQ/wQ1.svg
 
         const path = `${skinPath}/${columnBasedPath}`
-        if (await imgExists(path)) return path
+        this.imageSrc = path
+        return path
+    }
+    getNormalImageSrc() {
+        if (this.ghost && this.ghostImage) return this.ghostImage
 
-        return `${skinPath}/${pieceName}.svg` // e.g. wQ.svg
+        const selectedSkin = getSelectedSkin()
+        const skinPath = this.getSkinPath(selectedSkin)
+
+        const pieceName = colorLetter[this.color] + typeLetter[this.type]
+
+        const imageSrc = `${skinPath}/${pieceName}.svg` // e.g. wQ.svg
+        this.imageSrc = imageSrc
+        return imageSrc
     }
     capture() {
         this.game.position.halfMoves = 0

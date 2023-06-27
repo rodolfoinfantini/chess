@@ -298,7 +298,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                     piece.y,
                     board.querySelector('.board-content'),
                     false,
-                    obj
+                    obj,
                 )
                 newPiece.render()
                 pieces.push(newPiece)
@@ -329,7 +329,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                             i,
                             board.querySelector('.board-content'),
                             false,
-                            obj
+                            obj,
                         )
                         newPiece.render()
                         pieces.push(newPiece)
@@ -495,7 +495,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             draggingPiece.y,
             board.querySelector('.board-content'),
             true,
-            obj
+            obj,
+            draggingPiece.imageSrc,
         )
         ghostPiece.render()
 
@@ -503,7 +504,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             draggingPiece.x,
             draggingPiece.y,
             board.querySelector('.board-content'),
-            tile.selected
+            tile.selected,
         )
         tiles.selected.push(newTile)
 
@@ -516,8 +517,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                     x,
                     y,
                     board.querySelector('.board-content'),
-                    draggingPiece.legalMoves[key] ? tile.capture : tile.move
-                )
+                    draggingPiece.legalMoves[key] ? tile.capture : tile.move,
+                ),
             )
         }
     }
@@ -555,7 +556,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                 updatePosition(
                     `${from.x}${from.y}`,
                     `${to.x}${to.y}`,
-                    moveResult === 'q' ? 'q' : undefined
+                    moveResult === 'q' ? 'q' : undefined,
                 )
             }
         }
@@ -625,8 +626,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                             +from.split('')[1],
                             x,
                             y,
-                            moveResult === 'q' ? 'q' : undefined
-                        )
+                            moveResult === 'q' ? 'q' : undefined,
+                        ),
                     )
                 }
                 if (hasMoved(draggingPiece)) {
@@ -674,10 +675,10 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     function repetitionDraw() {
         const fenHistory = position.fenHistory.filter(
-            (item, index) => position.fenHistory.indexOf(item) === index
+            (item, index) => position.fenHistory.indexOf(item) === index,
         )
         const fenHistoryCount = fenHistory.map(
-            (item) => position.fenHistory.filter((i) => i === item).length
+            (item) => position.fenHistory.filter((i) => i === item).length,
         )
         const repetition = fenHistoryCount.filter((item) => item > 2)
         return repetition.length > 0
@@ -942,7 +943,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             p.textContent = `${winner === color.white ? 'Black' : 'White'} is victorious.`
             div.classList.replace(
                 winner === color.white ? 'white' : 'black',
-                winner === color.white ? 'black' : 'white'
+                winner === color.white ? 'black' : 'white',
             )
         } else if (infoType === info.timeOut) {
             h1.textContent = `${winner === color.white ? 'White' : 'Black'} wins.`
