@@ -63,15 +63,15 @@ function tableExists(tableName) {
     })
 }
 
-export function mysqlQuery(query) {
+export function mysqlQuery(...query) {
     return new Promise((resolve, reject) => {
-        con.query(query, async (err, results) => {
+        con.query(...query, async (err, results) => {
             if (err) {
                 if (
                     err.message.includes("Can't add new command when connection is in closed state")
                 ) {
                     await reconnect()
-                    con.query(query, (err, results) => {
+                    con.query(...query, (err, results) => {
                         if (err) reject(err)
                         else resolve(results)
                     })
