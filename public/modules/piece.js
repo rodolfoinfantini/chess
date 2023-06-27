@@ -241,7 +241,7 @@ export default class Piece {
         const pieceName = colorLetter[this.color] + typeLetter[this.type]
 
         const column = this.initialPosition.x + 1
-        const columnBasedPath = `${pieceName}/${pieceName}${row}.svg` // e.g. wQ/wQ1.svg
+        const columnBasedPath = `${pieceName}/${pieceName}${column}.svg` // e.g. wQ/wQ1.svg
 
         const path = `${skinPath}/${columnBasedPath}`
         if (await imgExists(path)) return path
