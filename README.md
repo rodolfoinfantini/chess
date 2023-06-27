@@ -76,7 +76,7 @@ docker compose down
 npm run deploy
 ```
 
-It will stop the container, rebuild the image and start the container again.
+* It will stop the container, rebuild the image and start the container again.
 
 ### Rules:
 
