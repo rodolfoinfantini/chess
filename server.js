@@ -465,12 +465,23 @@ function Game(id, time, rated = false, isPublic = false) {
     }
 
     setInterval(() => {
+        if (state !== 1) return
         if (msToSec(players.white.timer.getTime()) <= 0) {
             win('black')
             io.to(id).emit('time-out', 'white')
+            io.to(id).emit('update-timers', {
+                white: 0,
+                black: players.black.timer.getTime(),
+                running: null,
+            })
         } else if (msToSec(players.black.timer.getTime()) <= 0) {
             win('white')
             io.to(id).emit('time-out', 'black')
+            io.to(id).emit('update-timers', {
+                white: players.white.timer.getTime(),
+                black: 0,
+                running: null,
+            })
         }
     }, 100)
 
@@ -813,6 +824,8 @@ function Game(id, time, rated = false, isPublic = false) {
 
             players.white.timer?.reset()
             players.black.timer?.reset()
+
+            state = 1
 
             io.to(id).emit('update-timers', {
                 white: secToMs(gameTime),
