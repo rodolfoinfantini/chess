@@ -13,8 +13,6 @@ import { encrypt } from './modules/encript.js'
 import { sendEmail } from './modules/email.js'
 import { loadEngine } from './loadEngine.js'
 
-sendEmail(process.env.EMAIL_USER, 'start', 'start')
-
 const __dirname = path.resolve()
 
 const app = express()
