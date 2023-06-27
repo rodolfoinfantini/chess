@@ -5,10 +5,10 @@
     "main": "server.js",
     "type": "module",
     "scripts": {
-        "build": "docker build . -t rodolfoinfantini/chess",
+        "build": "docker build . -t chess",
         "run": "docker compose up -d",
         "stop": "docker compose down",
-        "deploy": "yarn stop && yarn build && yarn run run",
+        "deploy": "npm run stop && npm run build && npm run run",
         "start": "node server.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },

@@ -26,7 +26,7 @@ Made with vanilla JavaScript, using socket.io, Node JS, MySQL and [Stockfish.js]
 
 - You can run it without Docker using node 16 (It **MUST** be 16) providing the environment variables in the `.env` file. But it is easier to run with the Dockerfile and docker compose:
 
-1. Build the docker image (you need to do this on every change to the code):
+1. Build the docker image:
 
 ```
 docker build . -t chess
@@ -40,7 +40,7 @@ version: '3'
 
 services:
     chess:
-        image: chess #must be the same name you set on the build command
+        image: chess
         network_mode: 'host'
         environment:
             PORT: 3000
@@ -69,6 +69,14 @@ services:
 ```
 docker compose down
 ```
+
+5. Now, if you want to update the running container just do (no need to execute the last steps anymore):
+
+```
+npm run deploy
+```
+
+* It will stop the container, rebuild the image and start the container again.
 
 ### Rules:
 
