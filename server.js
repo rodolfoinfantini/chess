@@ -53,7 +53,7 @@ async function getEloFromToken(token) {
             username: null,
         }
     }
-    const user = await mysqlQuery(`select * from users where token = '${token}'`)
+    const user = await mysqlQuery(`select * from users where token = ?`, [token])
     if (user.length === 0) {
         return {
             elo: null,
@@ -71,7 +71,8 @@ async function login(username, password) {
         try {
             const encryptedPassword = encrypt(password)
             const user = await mysqlQuery(
-                `select * from users where (username = '${username}' or email = '${username}') and password = '${encryptedPassword}'`,
+                'select * from users where (username = ? or email = ?) and password = ?',
+                [username + '', username + '', encryptedPassword + ''],
             )
             if (user.length === 0) {
                 reject(new Error('Invalid username or password'))
@@ -87,16 +88,17 @@ async function login(username, password) {
                 return
             }
             let newToken = randStr(40)
-            const token = await mysqlQuery(`select token from users where token = '${newToken}'`)
+            const token = await mysqlQuery(`select token from users where token = ?`, [newToken])
             if (token.length > 0) {
                 while (newToken === token[0].token) {
                     newToken = randStr(10)
                 }
             }
             await mysqlQuery(
-                `update users set token = '${newToken}' where (username = '${username}' or email = '${username}') and password = '${encryptedPassword}'`,
+                `update users set token = ? where (username = ? or email = ?) and password = ?`,
+                [newToken, username, username, encryptedPassword],
             )
-            resolve((await mysqlQuery(`select * from users where token = '${newToken}'`))[0])
+            resolve((await mysqlQuery(`select * from users where token = ?`, [newToken]))[0])
         } catch (error) {
             reject(error)
         }
@@ -203,7 +205,7 @@ app.post('/account/verify', async (req, res) => {
     }
     if (verifications[email] === code) {
         try {
-            await mysqlQuery(`update users set verified = true where email = '${email}'`)
+            await mysqlQuery(`update users set verified = true where email = ?`, [email])
             delete verifications[email]
             res.json({
                 success: true,
@@ -502,18 +504,17 @@ function Game(id, time, rated = false, isPublic = false) {
         console.log(`> Room ${id}: ${color} is victorious`)
         state = 2
         if (players[color].token && rated) {
-            mysqlQuery(
-                `update users set elo = ${players[color].info.elo + 10} where token = '${
-                    players[color].token
-                }'`,
-            )
+            mysqlQuery(`update users set elo = ${players[color].info.elo + 10} where token = ?`, [
+                players[color].token,
+            ])
             if (players[color].socket) players[color].socket?.emit('update-elo', 10)
         }
         if (players[oppositeColor(color)].token && rated) {
             mysqlQuery(
                 `update users set elo = ${
                     players[oppositeColor(color)].info.elo - 10
-                } where token = '${players[oppositeColor(color)].token}'`,
+                } where token = ?`,
+                [players[oppositeColor(color)].token],
             )
             if (players[oppositeColor(color)].socket)
                 players[oppositeColor(color)].socket?.emit('update-elo', -10)
