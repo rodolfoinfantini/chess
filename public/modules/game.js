@@ -134,10 +134,12 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     let skillLevel = 10
 
     function setMoveTime(newMoveTime) {
-        moveTime = newMoveTime
+        moveTime = Math.max(1, newMoveTime)
     }
     // const stockfish = new Worker(`${location.pathname === '/' ? '' : '.'}./lc0/lc0.js`)
     const stockfish = new Worker(`${location.pathname === '/' ? '' : '.'}./stockfish/stockfish.js`)
+    let uciok = false
+    let nnueLoaded = false
 
     let isClicking = false
 
@@ -298,7 +300,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                     piece.y,
                     board.querySelector('.board-content'),
                     false,
-                    obj
+                    obj,
                 )
                 newPiece.render()
                 pieces.push(newPiece)
@@ -329,7 +331,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                             i,
                             board.querySelector('.board-content'),
                             false,
-                            obj
+                            obj,
                         )
                         newPiece.render()
                         pieces.push(newPiece)
@@ -495,7 +497,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             draggingPiece.y,
             board.querySelector('.board-content'),
             true,
-            obj
+            obj,
         )
         ghostPiece.render()
 
@@ -503,7 +505,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             draggingPiece.x,
             draggingPiece.y,
             board.querySelector('.board-content'),
-            tile.selected
+            tile.selected,
         )
         tiles.selected.push(newTile)
 
@@ -516,8 +518,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                     x,
                     y,
                     board.querySelector('.board-content'),
-                    draggingPiece.legalMoves[key] ? tile.capture : tile.move
-                )
+                    draggingPiece.legalMoves[key] ? tile.capture : tile.move,
+                ),
             )
         }
     }
@@ -555,7 +557,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                 updatePosition(
                     `${from.x}${from.y}`,
                     `${to.x}${to.y}`,
-                    moveResult === 'q' ? 'q' : undefined
+                    moveResult === 'q' ? 'q' : undefined,
                 )
             }
         }
@@ -625,8 +627,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
                             +from.split('')[1],
                             x,
                             y,
-                            moveResult === 'q' ? 'q' : undefined
-                        )
+                            moveResult === 'q' ? 'q' : undefined,
+                        ),
                     )
                 }
                 if (hasMoved(draggingPiece)) {
@@ -674,10 +676,10 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     function repetitionDraw() {
         const fenHistory = position.fenHistory.filter(
-            (item, index) => position.fenHistory.indexOf(item) === index
+            (item, index) => position.fenHistory.indexOf(item) === index,
         )
         const fenHistoryCount = fenHistory.map(
-            (item) => position.fenHistory.filter((i) => i === item).length
+            (item) => position.fenHistory.filter((i) => i === item).length,
         )
         const repetition = fenHistoryCount.filter((item) => item > 2)
         return repetition.length > 0
@@ -847,35 +849,40 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     //!STOCKFISH
     stockfish.onmessage = ({ data }) => {
+        if (data === 'uciok') uciok = true
+        if (data === 'Load eval file success: 1') nnueLoaded = true
+
         if (state === states.end || state === states.start) return
-        const dataArr = data.split(' ')
+
         if (data.includes('checkmate') || data === 'info depth 0 score mate 0') {
             checkmate(oppositeColor(turn))
             return
-        } else if (dataArr.includes('bestmove')) {
-            if (!data.includes('(none)')) {
-                if (
-                    (mode === gamemode.playerVsComputer && turn !== player.color) ||
-                    (mode === gamemode.computerVsComputer && mode !== gamemode.multiplayer)
-                ) {
-                    const move = dataArr[1]
-                    const moveNumber = moveStringToNumber(move)
-                    const split = moveNumber.split('')
-                    const piece = pieces.find((piece) => piece.x == split[0] && piece.y == split[1])
-                    if (!piece) return
-                    piece.move(split[2], split[3], true)
-                    if (hasMoved(piece)) {
-                        updatePosition(split[0] + split[1], split[2] + split[3], split[4])
-                        return
-                    }
-                    updatePosition(split[0] + split[1], split[2] + split[3], split[4])
-                    if (mode === gamemode.computerVsComputer) moveStockfish()
-                    else analyzeStockfish()
-                }
-            } else {
-                if (state === states.playing) stalemate()
-            }
         }
+
+        if (!data.includes('bestmove')) return
+
+        if (data.includes('(none)')) {
+            if (state === states.playing) stalemate()
+            return
+        }
+
+        if (mode !== gamemode.playerVsComputer && mode !== gamemode.computerVsComputer) return
+        if (mode === gamemode.playerVsComputer && turn === player.color) return
+
+        const dataArr = data.split(' ')
+        const move = dataArr[1]
+        const moveNumber = moveStringToNumber(move)
+        const split = moveNumber.split('')
+        const piece = pieces.find((piece) => piece.x == split[0] && piece.y == split[1])
+        if (!piece) return
+        piece.move(split[2], split[3], true)
+        if (hasMoved(piece)) {
+            updatePosition(split[0] + split[1], split[2] + split[3], split[4])
+            return
+        }
+        updatePosition(split[0] + split[1], split[2] + split[3], split[4])
+        if (mode === gamemode.computerVsComputer) moveStockfish()
+        else analyzeStockfish()
     }
 
     function stalemate() {
@@ -942,7 +949,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
             p.textContent = `${winner === color.white ? 'Black' : 'White'} is victorious.`
             div.classList.replace(
                 winner === color.white ? 'white' : 'black',
-                winner === color.white ? 'black' : 'white'
+                winner === color.white ? 'black' : 'white',
             )
         } else if (infoType === info.timeOut) {
             h1.textContent = `${winner === color.white ? 'White' : 'Black'} wins.`
@@ -1030,10 +1037,12 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     function moveStockfish() {
+        if (!uciok || !nnueLoaded) return setTimeout(moveStockfish, 100)
         stockfish.postMessage('go movetime ' + moveTime)
     }
 
     function analyzeStockfish() {
+        if (!uciok || !nnueLoaded) return setTimeout(analyzeStockfish, 100)
         stockfish.postMessage('go depth 1')
     }
 
@@ -1086,11 +1095,12 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     stockfish.postMessage('uci')
+    stockfish.postMessage('setoption name Use NNUE value true')
     stockfish.postMessage('isready')
     function setSkillLevel(level, time) {
         skillLevel = level
         stockfish.postMessage('setoption name Skill Level value ' + skillLevel)
-        moveTime = time
+        setMoveTime(time)
     }
 
     const obj = {

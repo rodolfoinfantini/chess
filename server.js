@@ -19,6 +19,19 @@ const app = express()
 const httpServer = createServer(app)
 const io = new Server(httpServer)
 
+app.use((req, res, next) => {
+    if (
+        req.headers.accept.includes('text/html') ||
+        req.url.includes('worker') ||
+        req.url.includes('stockfish.js')
+    ) {
+        res.header('Cross-Origin-Opener-Policy', 'same-origin')
+        res.header('Cross-Origin-Embedder-Policy', 'require-corp')
+        res.header('Cross-Origin-Resource-Policy', 'cross-origin')
+    }
+    next()
+})
+
 app.use(express.static('public'))
 app.use(express.json())
 
