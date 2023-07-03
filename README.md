@@ -26,34 +26,23 @@ Made with vanilla JavaScript, using socket.io, Node JS, MySQL and [Stockfish.js]
 
 - You can run it without Docker using node 16 (It **MUST** be 16) providing the environment variables in the `.env` file. But it is easier to run with the Dockerfile and docker compose:
 
-1. Build the docker image:
+1. Install Docker and Docker Compose.
+
+2. Build the docker image:
 
 ```
 docker build . -t chess
 ```
 
-2. Create a `docker-compose.yml` file (define the correct environment variables):
-* You can tweak this file to use a MySql container too, this example will use an external MySql server.
+3. Change the `docker-compose.yml` file:
+* Lines 23 and 24 to use a valid outlook email and password.
 
 ```
-version: '3'
-
-services:
-    chess:
-        image: chess
-        network_mode: 'host'
-        environment:
-            PORT: 3000
-            MYSQL_HOST: host #choose a valid MySql server
-            MYSQL_USER: user
-            MYSQL_PASSWORD: password
-            MYSQL_DB: database
-            DEBUG: false #print the stockfish debug logs
-            EMAIL_USER: user@outlook.com #it must be an outlook email
-            EMAIL_PASS: password #the outlook email password
+EMAIL_USER: user@outlook.com #it must be an outlook email
+EMAIL_PASS: password #the outlook email password
 ```
 
-3. Run the container:
+4. Run the container:
     1. Keep attached:
     ```
     docker compose up
@@ -64,13 +53,13 @@ services:
     docker compose up -d
     ```
 
-4. Stop the container:
+5. Stop the container:
 
 ```
 docker compose down
 ```
 
-5. Now, if you want to update the running container just do (no need to execute the last steps anymore):
+6. Now, if you want to update the running container just do (no need to execute the last steps anymore):
 
 ```
 npm run deploy
