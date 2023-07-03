@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+    mysqldb:
+        image: mysql
+        command: "--default-authentication-plugin=mysql_native_password --init-file /data/application/init.sql"
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: "root"
+        volumes:
+            - ./db:/var/lib/mysql
+            - ./init.sql:/data/application/init.sql
+    chess:
+        image: chess
+        restart: unless-stopped
+        environment:
+            PORT: 3000
+            MYSQL_HOST: mysqldb
+            MYSQL_USER: root
+            MYSQL_PASSWORD: root
+            MYSQL_DB: chess
+            DEBUG: false #print the stockfish debug logs
+            EMAIL_USER: user@outlook.com #it must be an outlook email
+            EMAIL_PASS: password #the outlook email password
+        ports:
+            - "3000:3000" #if you want to run it on a different port change the first one like (5555:3000) keep the second 3000
+        depends_on:
+          - mysqldb
