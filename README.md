@@ -34,6 +34,12 @@ Made with vanilla JavaScript, using socket.io, Node JS, MySQL and [Stockfish.js]
 docker build . -t chess
 ```
 
+3. __**(IMPORTANT)**__ Create the db folder:
+
+```
+mkdir db/data
+```
+
 3. Change the `docker-compose.yml` file:
 * Lines 23 and 24 to use a valid outlook email and password.
 
