@@ -49,6 +49,21 @@ export function PuzzleGame(puzzle, board, solvedCallback) {
 export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCallback, players) {
     time = +time
 
+    let loading = true
+    const loadingElement = document.createElement('div')
+    loadingElement.classList.add('loading')
+    const spinner = document.createElement('div')
+    spinner.classList.add('spinner')
+    loadingElement.appendChild(spinner)
+    if (gMode !== gamemode.placeholder) board.appendChild(loadingElement)
+    function checkLoading() {
+        if (!loading) return
+        if (nnueLoaded && uciok) {
+            loading = false
+            loadingElement.remove()
+        }
+    }
+
     let puzzleMoveIndex = 0
 
     function getPuzzleMoveIndex() {
@@ -410,6 +425,8 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     function start() {
+        if (mode === gamemode.placeholder) return
+
         clearTiles('check')
         clearTiles('selected')
         clearTiles('move')
@@ -450,7 +467,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     board.onmousedown = ({ target, clientX, clientY }) => {
-        if (mode === gamemode.spectator) return
+        if (mode === gamemode.spectator || mode === gamemode.placeholder) return
 
         clearTiles('selected')
         clearTiles('move')
@@ -524,7 +541,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
         }
     }
     board.onmouseleave = () => {
-        if (mode === gamemode.spectator) return
+        if (mode === gamemode.spectator || mode === gamemode.placeholder) return
         board
             .querySelectorAll('piece.dragging')
             .forEach((piece) => piece.classList.remove('dragging'))
@@ -538,7 +555,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
 
     //!MOVE
     board.onmouseup = ({ clientX, clientY }) => {
-        if (mode === gamemode.spectator) return
+        if (mode === gamemode.spectator || mode === gamemode.placeholder) return
         if (state !== states.playing) return
         if (!isClicking) return
         isClicking = false
@@ -580,7 +597,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     }
 
     function move(clientX, clientY) {
-        if (mode === gamemode.spectator) return
+        if (mode === gamemode.spectator || mode === gamemode.placeholder) return
         if (!draggingPiece) return
         const boardRect = getClientRect()
         const pos = {
@@ -851,6 +868,7 @@ export function Game(gMode, playerColor, board, socket, time, puzzle, solvedCall
     stockfish.onmessage = ({ data }) => {
         if (data === 'uciok') uciok = true
         if (data === 'Load eval file success: 1') nnueLoaded = true
+        checkLoading()
 
         if (state === states.end || state === states.start) return
 
