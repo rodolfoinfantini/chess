@@ -115,6 +115,7 @@ export const gamemode = {
     multiplayer: 'multiplayer',
     puzzle: 'puzzle',
     spectator: 'spectator',
+    placeholder: 'placeholder',
 }
 
 export const state = {

@@ -70,7 +70,7 @@ const board = createBoard(
         if (game) game.startPos()
         gamemodeDiv.parentElement.parentElement.classList.remove('hidden')
     },
-    socket
+    socket,
 )
 
 const placeholderBoard = createBoard(document.body)
@@ -380,7 +380,7 @@ function createTimeSelector() {
     return createGameDiv
 }
 
-const placeholderGame = Game(gamemode.playerVsPlayer, color.white, placeholderBoard)
+const placeholderGame = Game(gamemode.placeholder, color.white, placeholderBoard)
 
 let game
 
@@ -488,7 +488,7 @@ socket.on('spectator', ({ fen, gameTime, players }) => {
         +gameTime,
         { fen },
         undefined,
-        players
+        players,
     )
     document.body.appendChild(board)
     game.start()
@@ -508,7 +508,7 @@ socket.on('start', ({ gameTime, players }) => {
         +gameTime,
         undefined,
         undefined,
-        players
+        players,
     )
     document.body.appendChild(board)
     game.start()
