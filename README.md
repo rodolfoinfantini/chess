@@ -34,13 +34,13 @@ Made with vanilla JavaScript, using socket.io, Node JS, MySQL and [Stockfish.js]
 docker build . -t chess
 ```
 
-3. __**(IMPORTANT)**__ Create the db folder:
+3. **__(IMPORTANT)__** Create the db folder:
 
 ```
 mkdir db/data
 ```
 
-3. Change the `docker-compose.yml` file:
+4. Change the `docker-compose.yml` file:
 * Lines 23 and 24 to use a valid outlook email and password.
 
 ```
@@ -48,7 +48,7 @@ EMAIL_USER: user@outlook.com #it must be an outlook email
 EMAIL_PASS: password #the outlook email password
 ```
 
-4. Run the container:
+5. Run the container:
     1. Keep attached:
     ```
     docker compose up
@@ -59,13 +59,13 @@ EMAIL_PASS: password #the outlook email password
     docker compose up -d
     ```
 
-5. Stop the container:
+6. Stop the container:
 
 ```
 docker compose down
 ```
 
-6. Now, if you want to update the running container just do (no need to execute the last steps anymore):
+7. Now, if you want to update the running container just do (no need to execute the last steps anymore):
 
 ```
 npm run deploy
