@@ -523,6 +523,9 @@ function Game(id, time, rated = false, isPublic = false) {
         }
     }
 
+    engine.postMessage('uci')
+    engine.postMessage('isready')
+
     engine.postMessage('ucinewgame')
     engine.postMessage('position startpos')
 

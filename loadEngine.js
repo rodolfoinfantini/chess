@@ -354,7 +354,7 @@ const load_engine = (function () {
 })()
 
 function loadEngine() {
-    const engine = load_engine('stockfish/stockfish.js')
+    const engine = load_engine('node_modules/stockfish/src/stockfish.js')
     engine.onmessage = () => {}
     engine.postMessage = (msg) => engine.send(msg, () => {}, engine.onmessage)
     engine.terminate = () => {
